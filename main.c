@@ -10,11 +10,98 @@
 #define TOTAL_PERGUNTAS 3   // quantidade de monumentos (perguntas) do jogo
 #define PONTOS_POR_ACERTO 10
 
-// Mapa
-#define MAPA_X 360
-#define MAPA_Y 90
-#define BLOCO_L 56
-#define BLOCO_A 40
+// ===== MAPA DO BRASIL =====
+// O mapa e uma matriz de letras. Cada letra e um estado e cada letra
+// vira um quadradinho de CELULA x CELULA pixels na tela. O ponto '.' e o mar.
+// A letra de cada estado esta no vetor LETRAS, na mesma posicao do vetor siglas:
+//   A=RR  B=AP  C=AM  D=PA  E=MA  F=CE  G=RN  H=AC  I=RO  J=MT  K=TO  L=PI  M=PE  N=PB
+//   O=MS  P=GO  Q=DF  R=BA  S=SE  T=AL  U=SP  V=MG  W=ES  X=PR  Y=RJ  Z=SC  #=RS
+#define MAPA_LINHAS 46
+#define MAPA_COLUNAS 47
+#define CELULA 8      // tamanho de cada quadradinho em pixels
+#define MAPA_X 412    // canto esquerdo do mapa na tela
+#define MAPA_Y 82     // topo do mapa na tela
+
+char LETRAS[TOTAL + 1] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
+
+char *mapa[MAPA_LINHAS] = {
+    "................A..............................",
+    "..............AAA..............................",
+    "............AAAAA.........BB...................",
+    "............AAAAA.....D..BBB...................",
+    ".....CCC....CCAAAA.DDDDDBBBBB..................",
+    ".....CCCCCCCCCAAAADDDDDDDBBBB..................",
+    ".....CCCCCCCCCAAACDDDDDDDBBDDD.................",
+    ".....CCCCCCCCCACCCCDDDDDDDBDDDDDD..............",
+    ".....CCCCCCCCCCCCCCCDDDDDDDDDDDDDEE............",
+    ".....CCCCCCCCCCCCCCCCDDDDDDDDDDDDEEEEE.........",
+    ".....CCCCCCCCCCCCCCCCDDDDDDDDDDDEEEEEELFFF.....",
+    "...CCCCCCCCCCCCCCCCCDDDDDDDDDDDDEEEEELLFFFF....",
+    ".CCCCCCCCCCCCCCCCCCCDDDDDDDDDDDEEEEEELLFFFFGGG.",
+    ".CCCCCCCCCCCCCCCCCCDDDDDDDDDDDDKEEEEELLLFFFGGGG",
+    "CCCCCCCCCCCCCCCCCCCDDDDDDDDDDDKKEEEELLLLFFNNNNN",
+    "HHCCCCCCCCCCCCCCCCCDDDDDDDDDDDKKEELLLLLLMMMNNNN",
+    ".HHHHCCCCCCCIICCCCCJDDDDDDDDDKKKKELLLLLMMMMMMMM",
+    ".HHHHHHCCCCIIIIJJJJJJDDDDDDDDKKKKELLLLRRRRTTTT.",
+    "....HHHHH.IIIIIJJJJJJJJJJJJJKKKKKELLRRRRRRSST..",
+    "....HHH...IIIIIIJJJJJJJJJJJJKKKKKRRRRRRRRRSS...",
+    "...........IIIIIIJJJJJJJJJJJKKKKKRRRRRRRRRRR...",
+    ".............IIIIJJJJJJJJJJJKKKKKRRRRRRRRRR....",
+    "...............IJJJJJJJJJJJJPPPPPRRRRRRRRR.....",
+    "................JJJJJJJJJJJJPPPPPRRVRRRRRR.....",
+    "................JJJJJJJJJJJPPPPPPVVVVVRRRR.....",
+    ".................JJJJJJJJJPPPPPQQVVVVVVVVR.....",
+    "...................JJJJJJPPPPPPQQVVVVVVVRR.....",
+    "...................JOOOOJPPPPPPPVVVVVVVVRR.....",
+    "...................OOOOOOPPPPVVVVVVVVVVWW......",
+    "...................OOOOOOOOPVVVVVVVVVVVWW......",
+    "...................OOOOOOOOUUUUUVVVVVVVWW......",
+    "...................OOOOOOOOUUUUUVVVVVVYW.......",
+    "...................OOOOOOOUUUUUUUVVVVYYY.......",
+    "......................OOOXXUUUUUUVUYYY.........",
+    "......................OOXXXXXUUUUUU............",
+    ".......................XXXXXXXUU...............",
+    ".......................XXXXXXXX................",
+    "........................XXXXZXZ................",
+    "........................ZZZZZZZ................",
+    ".......................####ZZZZ................",
+    ".....................########Z.................",
+    "....................#########..................",
+    "....................#########..................",
+    "......................#####....................",
+    "........................##.....................",
+    ".........................#.....................",
+};
+
+// Recebe uma letra do mapa e devolve a posicao do estado (0 a 26).
+// Se for mar ('.'), devolve -1.
+int estado_da_letra(char letra)
+{
+    for (int i = 0; i < TOTAL; i++) {
+        if (LETRAS[i] == letra) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Recebe uma posicao da tela (x, y), por exemplo onde esta o mouse,
+// e devolve qual estado esta ali. Devolve -1 se for mar ou fora do mapa.
+int estado_na_tela(int x, int y)
+{
+    if (x < MAPA_X || y < MAPA_Y) {
+        return -1; // a esquerda ou acima do mapa
+    }
+
+    // divide pelo tamanho do quadradinho para achar a coluna e a linha da matriz
+    int coluna = (x - MAPA_X) / CELULA;
+    int linha = (y - MAPA_Y) / CELULA;
+
+    if (coluna >= MAPA_COLUNAS || linha >= MAPA_LINHAS) {
+        return -1; // a direita ou abaixo do mapa
+    }
+    return estado_da_letra(mapa[linha][coluna]);
+}
 
 // Escreve um texto MAIOR que o normal, centralizado em x.
 // A fonte embutida do Allegro e bem pequena (8 pixels), entao
@@ -63,18 +150,19 @@ int main()
         "Santa Catarina", "Rio Grande do Sul"
     };
 
-    // coluna e linha de cada estado no mapa (mais ou menos onde fica no Brasil)
-    int coluna[TOTAL] = {
-        2, 4, 1, 3, 5, 6, 7,
-        0, 1, 2, 4, 5, 6, 7,
-        2, 3, 4, 5, 6, 7,
-        3, 4, 5, 3, 4, 3, 3
+    // linha e coluna da matriz onde a sigla de cada estado e escrita.
+    // Nos estados pequenos do litoral a sigla fica no mar, ao lado do estado.
+    int rotulo_linha[TOTAL] = {
+        3, 4, 11, 11, 12, 12, 12,
+        17, 19, 21, 18, 15, 16, 14,
+        30, 27, 25, 21, 19, 17,
+        32, 28, 29, 35, 33, 38, 41
     };
-    int linha[TOTAL] = {
-        0, 0, 1, 1, 1, 1, 1,
-        2, 2, 2, 2, 2, 2, 2,
-        3, 3, 3, 3, 3, 3,
-        4, 4, 4, 5, 5, 6, 7
+    int rotulo_coluna[TOTAL] = {
+        15, 26, 11, 25, 34, 40, 48,
+        4, 13, 21, 30, 37, 48, 48,
+        22, 26, 31, 38, 45, 47,
+        30, 35, 43, 26, 40, 28, 24
     };
 
     // ===== PERGUNTAS =====
@@ -224,30 +312,62 @@ int main()
             al_draw_rectangle(20, 90, 320, 450, branco, 3);
 
             // mapa
-            al_draw_text(fonte, cinza, 605, 70, ALLEGRO_ALIGN_CENTRE,
+            al_draw_text(fonte, cinza, 600, 66, ALLEGRO_ALIGN_CENTRE,
                 "Clique no estado onde fica o monumento:");
+            // qual estado esta embaixo do mouse agora (-1 = nenhum)
+            int estado_mouse = estado_na_tela(mouse_x, mouse_y);
+
+            // percorre a matriz linha por linha, coluna por coluna
+            for (int lin = 0; lin < MAPA_LINHAS; lin++) {
+                for (int col = 0; col < MAPA_COLUNAS; col++) {
+                    char letra = mapa[lin][col];
+                    if (letra == '.') {
+                        continue; // e mar: nao desenha nada
+                    }
+
+                    int i = estado_da_letra(letra);
+                    int x = MAPA_X + col * CELULA;
+                    int y = MAPA_Y + lin * CELULA;
+
+                    ALLEGRO_COLOR cor = al_map_rgb(70, 150, 80); // verde normal
+                    if (escolhido != -1 && i == respostas[pergunta]) {
+                        cor = amarelo;                           // resposta certa
+                    }
+                    else if (i == escolhido) {
+                        cor = al_map_rgb(210, 60, 50);           // escolha errada
+                    }
+                    else if (escolhido == -1 && i == estado_mouse) {
+                        cor = al_map_rgb(130, 210, 140);         // verde claro (mouse em cima)
+                    }
+                    al_draw_filled_rectangle(x, y, x + CELULA, y + CELULA, cor);
+
+                    // fronteira: desenha uma linha escura onde o vizinho
+                    // e outro estado ou o mar (ou onde a matriz acaba)
+                    if (lin == 0 || mapa[lin - 1][col] != letra) {
+                        al_draw_line(x, y, x + CELULA, y, preto, 1);                     // em cima
+                    }
+                    if (lin == MAPA_LINHAS - 1 || mapa[lin + 1][col] != letra) {
+                        al_draw_line(x, y + CELULA, x + CELULA, y + CELULA, preto, 1);   // embaixo
+                    }
+                    if (col == 0 || mapa[lin][col - 1] != letra) {
+                        al_draw_line(x, y, x, y + CELULA, preto, 1);                     // esquerda
+                    }
+                    if (col == MAPA_COLUNAS - 1 || mapa[lin][col + 1] != letra) {
+                        al_draw_line(x + CELULA, y, x + CELULA, y + CELULA, preto, 1);   // direita
+                    }
+                }
+            }
+
+            // escreve a sigla de cada estado
             for (int i = 0; i < TOTAL; i++) {
-                int x = MAPA_X + coluna[i] * (BLOCO_L + 6);
-                int y = MAPA_Y + linha[i] * (BLOCO_A + 6);
-
-                // o mouse esta em cima deste bloco?
-                int mouse_em_cima = mouse_x >= x && mouse_x <= x + BLOCO_L &&
-                                    mouse_y >= y && mouse_y <= y + BLOCO_A;
-
-                ALLEGRO_COLOR cor = al_map_rgb(70, 150, 80); // verde normal
-                if (escolhido != -1 && i == respostas[pergunta]) {
-                    cor = amarelo;                           // resposta certa
+                int x = MAPA_X + rotulo_coluna[i] * CELULA + CELULA / 2;
+                int y = MAPA_Y + rotulo_linha[i] * CELULA;
+                // sigla em cima do estado = preta; sigla no mar = branca
+                ALLEGRO_COLOR cor_sigla = preto;
+                if (rotulo_coluna[i] >= MAPA_COLUNAS || mapa[rotulo_linha[i]][rotulo_coluna[i]] == '.') {
+                    cor_sigla = branco;
                 }
-                else if (i == escolhido) {
-                    cor = al_map_rgb(210, 60, 50);           // escolha errada
-                }
-                else if (escolhido == -1 && mouse_em_cima) {
-                    cor = al_map_rgb(130, 210, 140);         // verde claro (mouse em cima)
-                }
-
-                al_draw_filled_rectangle(x, y, x + BLOCO_L, y + BLOCO_A, cor);
-                al_draw_rectangle(x, y, x + BLOCO_L, y + BLOCO_A, preto, 2);
-                al_draw_text(fonte, preto, x + BLOCO_L / 2, y + BLOCO_A / 2 - 4, ALLEGRO_ALIGN_CENTRE, siglas[i]);
+                al_draw_text(fonte, cor_sigla, x, y, ALLEGRO_ALIGN_CENTRE, siglas[i]);
             }
 
             // painel de mensagens embaixo
@@ -334,20 +454,13 @@ int main()
             }
         }
         else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
-            // o mouse se mexeu: guarda a posicao para pintar o bloco de baixo dele
+            // o mouse se mexeu: guarda a posicao para pintar o estado embaixo dele
             mouse_x = evento.mouse.x;
             mouse_y = evento.mouse.y;
         }
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && escolhido == -1 && !fim_de_jogo) {
-            // ve em qual bloco o mouse clicou
-            for (int i = 0; i < TOTAL; i++) {
-                int x = MAPA_X + coluna[i] * (BLOCO_L + 6);
-                int y = MAPA_Y + linha[i] * (BLOCO_A + 6);
-                if (evento.mouse.x >= x && evento.mouse.x <= x + BLOCO_L &&
-                    evento.mouse.y >= y && evento.mouse.y <= y + BLOCO_A) {
-                    escolhido = i;
-                }
-            }
+            // ve em qual estado o mouse clicou (-1 se clicou no mar ou fora do mapa)
+            escolhido = estado_na_tela(evento.mouse.x, evento.mouse.y);
 
             // se clicou em um estado, confere a resposta e soma os pontos
             if (escolhido != -1 && escolhido == respostas[pergunta]) {

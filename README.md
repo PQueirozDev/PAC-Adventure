@@ -57,12 +57,12 @@ O jogo tem **3 perguntas**, uma para cada monumento:
 ## Como funciona
 
 - **Vetores das perguntas:** cada pergunta ocupa a mesma posição em vários vetores (`monumentos`, `arquivos`, `respostas`, `dicas`, `curiosidades`). A variável `pergunta` diz qual posição está na tela.
-- **Mapa esquemático:** os 26 estados e o Distrito Federal são retângulos com suas siglas, organizados aproximadamente pela posição geográfica. Os blocos **não** representam as fronteiras reais.
-- **Detecção do clique:** a posição de cada bloco é calculada a partir da coluna e da linha do estado. Um laço `for` verifica se o mouse está dentro de algum bloco; se estiver, aquele é o estado escolhido.
+- **Mapa do Brasil:** o mapa é uma matriz de letras no código, em que cada letra é um estado e o `.` é o mar. Cada letra vira um quadradinho na tela, formando o contorno do Brasil com os 26 estados e o Distrito Federal. As fronteiras são simplificadas, e o DF foi um pouco aumentado para dar para clicar.
+- **Detecção do clique:** a posição do mouse é dividida pelo tamanho do quadradinho, o que dá a linha e a coluna da matriz. A letra nessa posição diz qual estado foi clicado. Clicar no mar não faz nada.
 - **Pontuação:** se o estado clicado for igual à resposta da pergunta, o jogo soma 10 em `pontos` e 1 em `acertos`.
 - **Fotos:** cada monumento tem um arquivo de imagem na mesma pasta do `main.c`. Se uma foto não for encontrada, o jogo **não fecha**: ele mostra um quadro com o nome do arquivo que falta.
 
-Todo o código está em um único arquivo, `main.c`. A explicação detalhada para a apresentação está em [`EXPLICACAO.md`](EXPLICACAO.md).
+Todo o código está em um único arquivo, `main.c`. A explicação do código está em [`EXPLICACAO.md`](EXPLICACAO.md).
 
 ## Como executar
 

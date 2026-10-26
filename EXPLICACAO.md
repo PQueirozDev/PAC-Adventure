@@ -24,17 +24,19 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 | Parte | O que faz |
 |---|---|
 | `#include` | Traz as bibliotecas: `stdio.h` (para `printf` e `snprintf`) e os módulos do Allegro (janela, fonte, desenho de formas e imagens). |
-| `#define` | Cria constantes: tamanho da janela, número de estados (`TOTAL`), número de perguntas (`TOTAL_PERGUNTAS`), pontos por acerto e o tamanho dos blocos do mapa. Se quiser mudar um valor, muda só aqui. |
+| `#define` | Cria constantes: tamanho da janela, número de estados (`TOTAL`), número de perguntas (`TOTAL_PERGUNTAS`), pontos por acerto, o tamanho da matriz do mapa (`MAPA_LINHAS`, `MAPA_COLUNAS`), o tamanho de cada quadradinho (`CELULA`) e a posição do mapa na tela (`MAPA_X`, `MAPA_Y`). Se quiser mudar um valor, muda só aqui. |
+| Mapa (`mapa` e `LETRAS`) | O mapa do Brasil escrito como uma matriz de letras. Cada letra é um estado e o `.` é o mar. `LETRAS` diz qual letra é de qual estado. |
+| Funções `estado_da_letra` e `estado_na_tela` | A primeira transforma uma letra do mapa na posição do estado (0 a 26). A segunda recebe um ponto da tela (por exemplo, onde o mouse está) e diz qual estado está ali. |
 | Função `escrever_grande` | Desenha um texto maior que o normal. A fonte do Allegro é pequena (8 pixels), então a função "estica" o desenho (escala 2, 3 ou 4) e depois volta ao tamanho normal. É usada no título, no nome do monumento e na tela final. |
 | Início do `main` | Liga o Allegro (`al_init`), o teclado, o mouse e os addons. Cria a janela, a fila de eventos e a fonte. |
-| Vetores do mapa | `siglas`, `nomes`, `coluna` e `linha`: guardam a sigla, o nome e a posição de cada um dos 27 blocos do mapa. |
+| Vetores dos estados | `siglas` e `nomes` guardam a sigla e o nome dos 27 estados. `rotulo_linha` e `rotulo_coluna` dizem onde escrever a sigla de cada estado no mapa. |
 | `PERGUNTAS` | Vetores com os dados de cada pergunta: nome do monumento, arquivo da foto, resposta certa, dica e curiosidade. |
 | Carregar fotos | Um laço `for` carrega a foto de cada monumento. Se a foto não existir, o jogo avisa no console e continua. |
 | `VARIAVEIS DO JOGO` | Guardam o estado do jogo: pergunta atual, pontos, acertos, estado escolhido, dica, tela final e posição do mouse. |
 | `while (rodando)` | O laço principal. Cada volta desenha a tela e espera uma ação do jogador. |
 | `CORES USADAS NO JOGO` | Cria as cores (branco, amarelo, verde, vermelho etc.) com `al_map_rgb(vermelho, verde, azul)`. |
 | `TELA FINAL` | Desenhada quando `fim_de_jogo` vale 1: pontuação, acertos, resumo de cada pergunta e mensagem final. |
-| `TELA DA PERGUNTA` | Barra de cima com placar, foto do monumento, mapa e painel de mensagens embaixo. |
+| `TELA DA PERGUNTA` | Barra de cima com placar, foto do monumento, mapa e painel de mensagens embaixo. O mapa é desenhado com dois `for`, um dentro do outro, que passam por todas as posições da matriz. |
 | Tratamento de eventos | Depois de desenhar, `al_wait_for_event` espera o jogador. Um `if / else if` decide o que fazer: fechar, tecla apertada, mouse mexeu ou mouse clicou. |
 | Final do `main` | Libera da memória as fotos, a fonte, a fila e a janela (`al_destroy_...`). |
 
@@ -46,13 +48,16 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 |---|---|
 | **Variáveis `int`** | `pontos`, `acertos`, `pergunta`, `escolhido`, `dica`, `fim_de_jogo`, `mouse_x`, `mouse_y`. |
 | **Constantes (`#define`)** | `TOTAL`, `TOTAL_PERGUNTAS`, `PONTOS_POR_ACERTO`, `LARGURA`, `ALTURA`. |
-| **Vetores** | `siglas[27]`, `nomes[27]`, `coluna[27]`, `linha[27]`, `monumentos[3]`, `respostas[3]`, `dicas[3]`, `acertou[3]`, `fotos[3]`. |
+| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[3]`, `respostas[3]`, `dicas[3]`, `acertou[3]`, `fotos[3]`. |
+| **Matriz** | O `mapa`: cada linha é um texto e cada letra é uma coluna. `mapa[linha][coluna]` pega uma letra. |
 | **Vetores de texto (`char *`)** | Cada posição guarda um texto, por exemplo `nomes[24]` é `"Rio de Janeiro"`. |
-| **Condicionais (`if / else if / else`)** | Verificar acerto/erro, escolher a cor do bloco, escolher a mensagem final, descobrir qual tecla foi apertada. |
+| **Condicionais (`if / else if / else`)** | Verificar acerto/erro, escolher a cor de cada estado, desenhar as fronteiras, escolher a mensagem final, descobrir qual tecla foi apertada. |
 | **Laço `while`** | O laço principal do jogo (`while (rodando)`), que só para quando `rodando` vira 0. |
-| **Laço `for`** | Percorrer os 27 estados para desenhar o mapa e para descobrir onde o mouse clicou; carregar as 3 fotos; zerar o vetor `acertou` ao reiniciar. |
+| **Laço `for`** | Dois `for` aninhados percorrem a matriz para desenhar o mapa; outro `for` procura a letra no vetor `LETRAS`; carregar as 3 fotos; zerar o vetor `acertou` ao reiniciar. |
 | **Operadores de comparação e lógicos** | `>=`, `<=`, `==`, `!=`, `&&` (e), `\|\|` (ou), `!` (não). |
-| **Função** | `escrever_grande`, que recebe parâmetros e é chamada várias vezes. |
+| **Funções** | `estado_da_letra`, `estado_na_tela` e `escrever_grande`: recebem parâmetros e algumas devolvem um valor com `return`. |
+| **Divisão inteira** | `(x - MAPA_X) / CELULA` descobre a coluna da matriz: em C, dividir `int` por `int` descarta a parte decimal. |
+| **`continue`** | Ao desenhar o mapa, pula as posições que são mar. |
 | **`printf` / `snprintf`** | `printf` escreve aviso no console; `snprintf` monta um texto com números (ex.: `"20 de 30 pontos"`). |
 | **Ponteiros (uso simples)** | Os tipos do Allegro (`ALLEGRO_DISPLAY *`, `ALLEGRO_BITMAP *` etc.). Comparamos com `NULL` para saber se a foto carregou. |
 
@@ -115,65 +120,32 @@ Para **reiniciar**, o jogo volta todas as variáveis ao valor inicial: `pergunta
 
 ## 6. Como o mouse identifica o estado escolhido
 
-Cada estado é um retângulo. A posição dele é calculada pela **coluna** e **linha**:
+O mapa é uma **matriz de letras**. Cada letra vira um quadradinho de 8 × 8 pixels (`CELULA`) na tela. Um pedaço do mapa (Sudeste) fica assim:
 
-```c
-int x = MAPA_X + coluna[i] * (BLOCO_L + 6);
-int y = MAPA_Y + linha[i] * (BLOCO_A + 6);
+```
+OOUUUUUUUVVVVYYY
+OXXUUUUUUVUYYY..
 ```
 
-- `MAPA_X` e `MAPA_Y` são o canto do mapa na tela.
-- `BLOCO_L` e `BLOCO_A` são a largura e a altura de um bloco; o `+ 6` é o espaço entre blocos.
+`U` é São Paulo, `V` é Minas Gerais, `Y` é Rio de Janeiro e `.` é o mar. Por isso o desenho tem o formato do Brasil.
 
-Exemplo com o Rio de Janeiro (posição 24, coluna 4, linha 5):
-`x = 360 + 4 × 62 = 608` e `y = 90 + 5 × 46 = 320`. O bloco vai de (608, 320) até (664, 360).
-
-Quando acontece um clique, um laço `for` testa os 27 blocos. O mouse está dentro de um bloco se estiver **entre a esquerda e a direita** e **entre o topo e a base** dele:
+Para saber qual estado está embaixo do mouse, é só fazer a conta ao contrário: dividir a posição do mouse pelo tamanho do quadradinho.
 
 ```c
-if (evento.mouse.x >= x && evento.mouse.x <= x + BLOCO_L &&
-    evento.mouse.y >= y && evento.mouse.y <= y + BLOCO_A) {
-    escolhido = i;
-}
+int coluna = (x - MAPA_X) / CELULA;
+int linha = (y - MAPA_Y) / CELULA;
+return estado_da_letra(mapa[linha][coluna]);
 ```
 
-Se nenhum bloco combinar, `escolhido` continua `-1` e nada acontece.
+- `MAPA_X` e `MAPA_Y` são o canto do mapa na tela, por isso são subtraídos primeiro.
+- A divisão é inteira, então o resultado é o número da coluna e da linha da matriz.
+- Com a linha e a coluna, `mapa[linha][coluna]` dá a letra, e `estado_da_letra` transforma a letra na posição do estado.
 
-O **destaque verde-claro** usa a mesma conta: quando o mouse se mexe (evento `ALLEGRO_EVENT_MOUSE_AXES`), o jogo guarda a posição em `mouse_x` e `mouse_y` e pinta o bloco que está embaixo dele.
+Exemplo com um clique no Rio de Janeiro, no ponto (712, 342):
+`coluna = (712 − 412) / 8 = 37` e `linha = (342 − 82) / 8 = 32`. A letra em `mapa[32][37]` é `Y`, que é o RJ.
 
----
+Antes da conta, a função confere se o clique está dentro do mapa. Se o clique for no mar ou fora do mapa, ela devolve `-1`, `escolhido` continua `-1` e nada acontece.
 
-## 7. Possíveis perguntas do professor
+O **destaque verde-claro** usa a mesma função: quando o mouse se mexe (evento `ALLEGRO_EVENT_MOUSE_AXES`), o jogo guarda a posição em `mouse_x` e `mouse_y`, descobre o estado embaixo dele e pinta todos os quadradinhos daquele estado.
 
-**Por que vocês usaram vários vetores em vez de uma `struct`?**
-Porque ainda estamos aprendendo o básico. Vetores paralelos (mesma posição = mesma pergunta) são simples de entender e funcionam bem para poucas perguntas.
-
-**O que acontece se clicar fora do mapa?**
-O `for` não encontra nenhum bloco, então `escolhido` continua `-1` e o jogo continua esperando.
-
-**Dá para ganhar pontos clicando várias vezes na mesma pergunta?**
-Não. O clique só é aceito enquanto `escolhido == -1`. Depois da primeira resposta, novos cliques são ignorados até a próxima pergunta.
-
-**Como o jogo sabe que acabou?**
-Quando o jogador aperta `Enter` na última pergunta (`pergunta == TOTAL_PERGUNTAS - 1`), a variável `fim_de_jogo` vira 1 e o laço passa a desenhar a tela final.
-
-**O que é a fila de eventos?**
-É onde o Allegro guarda tudo o que o jogador faz (teclas, cliques, mexer o mouse, fechar a janela). `al_wait_for_event` pega o próximo evento e o `if / else if` decide o que fazer.
-
-**Por que os textos estão sem acento?**
-A fonte embutida do Allegro não mostra bem os acentos, então os textos foram escritos sem eles para não aparecerem símbolos estranhos.
-
-**O que acontece se uma foto não for encontrada?**
-O jogo mostra um aviso no console e desenha um quadro com o nome do arquivo que falta, em vez de fechar.
-
-**Por que usar `#define` para os pontos?**
-Para não espalhar o número 10 pelo código. Se o professor pedir 5 pontos por acerto, basta mudar uma linha.
-
-**Para que serve `al_destroy_...` no final?**
-Para devolver ao sistema a memória usada pela janela, fonte, fila e fotos.
-
-**Como aumentar o tamanho do texto se a fonte é pequena?**
-A função `escrever_grande` usa uma transformação do Allegro que multiplica o tamanho do desenho (escala). Depois ela volta a escala para 1, para o resto da tela não ficar grande.
-
-**O mapa é real?**
-Não. É um mapa esquemático: cada estado é um retângulo colocado mais ou menos na posição dele no Brasil. As fronteiras não são reais.
+As **fronteiras** são linhas pretas desenhadas onde a letra do vizinho (em cima, embaixo, à esquerda ou à direita) é diferente.
