@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onde Fica? — jogo de geografia em C</title>
+<meta name="description" content="Jogo educacional feito em C com Allegro 5: descubra em qual estado do Brasil ficam os monumentos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fundo: #141e3c;
+    --painel: #202e58;
+    --linha: #50649f;
+    --verde: #469650;
+    --verde-claro: #82d28c;
+    --amarelo: #f0c828;
+    --vermelho: #d23c32;
+    --texto: #e9edf7;
+    --suave: #aab4c8;
+    --c: 11px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  a { color: var(--amarelo); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, select:focus-visible {
+    outline: 3px solid var(--amarelo);
+    outline-offset: 3px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 { font-family: "Silkscreen", monospace; font-weight: 400; line-height: 1.15; margin: 0; }
+  h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); color: var(--amarelo); margin-bottom: 18px; }
+  h3 { font-size: 1.15rem; margin-bottom: 8px; }
+  p { margin: 0 0 1em; max-width: 64ch; }
+  code, pre, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  /* topo */
+  .topo { border-bottom: 2px solid var(--linha); background: var(--painel); }
+  .topo .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; flex-wrap: wrap; }
+  .marca { font-family: "Silkscreen", monospace; color: var(--amarelo); font-size: 1.3rem; text-decoration: none; }
+  .topo nav { display: flex; gap: 20px; flex-wrap: wrap; }
+  .topo nav a { color: var(--texto); text-decoration: none; font-size: .98rem; }
+  .topo nav a:hover { color: var(--amarelo); }
+
+  /* abertura com o mapa jogavel */
+  .abertura { padding: 56px 0 72px; }
+  .abertura .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: start; }
+  .abertura h1 { font-size: clamp(2.8rem, 7vw, 5.2rem); color: var(--amarelo); letter-spacing: .02em; margin-bottom: 20px; }
+  .abertura .intro { font-size: 1.2rem; color: var(--texto); }
+  .abertura .detalhe { color: var(--suave); }
+  .botoes { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+  .botao {
+    display: inline-block; font: inherit; font-weight: 700; cursor: pointer;
+    padding: 12px 22px; border-radius: 10px; text-decoration: none;
+    border: 3px solid var(--linha); background: var(--painel); color: var(--texto);
+  }
+  .botao:hover { background: var(--verde); border-color: var(--amarelo); color: #fff; }
+  .botao.principal { background: var(--verde); border-color: var(--amarelo); color: #fff; }
+
+  .jogo { width: calc(var(--c) * 47 + 42px); max-width: 100%; background: var(--painel); border: 3px solid var(--linha); border-radius: 14px; padding: 18px; }
+  .pergunta { font-family: "Silkscreen", monospace; font-size: 1.15rem; margin: 0 0 4px; }
+  .placar { color: var(--suave); font-size: .95rem; margin: 0 0 14px; }
+  .mapa {
+    display: grid;
+    grid-template-columns: repeat(var(--colunas), var(--c));
+    grid-auto-rows: var(--c);
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .cel { font-family: "IBM Plex Mono", monospace; font-size: calc(var(--c) * .62); line-height: var(--c); text-align: center; color: rgba(255,255,255,.28); }
+  .cel.mar { color: rgba(170,180,200,.16); }
+  .cel.terra { background: var(--verde); color: rgba(0,0,0,.42); cursor: pointer; border: 0 solid #0d1328; }
+  .cel.terra.mouse { background: var(--verde-claro); }
+  .cel.terra.certo { background: var(--amarelo); }
+  .cel.terra.errado { background: var(--vermelho); color: rgba(255,255,255,.5); }
+  .onde { min-height: 1.6em; margin: 12px 0 0; color: var(--suave); font-size: .95rem; }
+  .resposta { min-height: 3.2em; margin: 6px 0 0; }
+  .resposta strong.ok { color: var(--verde-claro); }
+  .resposta strong.nao { color: #f07064; }
+  .controles { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .controles label { color: var(--suave); font-size: .9rem; }
+  select { font: inherit; font-size: .95rem; padding: 6px 8px; border-radius: 8px; border: 2px solid var(--linha); background: var(--fundo); color: var(--texto); }
+  .controles .botao { padding: 8px 16px; font-size: .95rem; }
+  [hidden] { display: none !important; }
+
+  /* secoes */
+  section { padding: 72px 0; border-top: 2px solid var(--painel); }
+  .sub { color: var(--suave); max-width: 64ch; margin-bottom: 32px; }
+
+  .telas { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; }
+  .telas figure { margin: 0; }
+  .telas img { width: 100%; height: auto; display: block; border: 3px solid var(--linha); border-radius: 8px; image-rendering: pixelated; }
+  .telas figcaption { margin-top: 10px; color: var(--suave); font-size: .97rem; }
+  .telas figcaption b { color: var(--texto); }
+
+  .etapas { list-style: none; padding: 0; margin: 0; counter-reset: etapa; display: grid; gap: 0; }
+  .etapas li { counter-increment: etapa; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 20px; padding: 22px 0; border-bottom: 1px dashed var(--linha); }
+  .etapas li:last-child { border-bottom: 0; }
+  .etapas li::before {
+    content: counter(etapa);
+    font-family: "Silkscreen", monospace; font-size: 2rem; color: var(--fundo);
+    background: var(--amarelo); width: 56px; height: 56px; display: grid; place-items: center; border-radius: 8px;
+  }
+  .etapas p { margin-bottom: 0; }
+
+  .codigo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px 48px; align-items: start; }
+  .codigo pre {
+    margin: 0; padding: 16px 18px; background: #0d1328; border: 2px solid var(--painel); border-radius: 10px;
+    overflow-x: auto; font-size: .88rem; line-height: 1.55; color: var(--texto);
+  }
+  .codigo pre .com { color: var(--suave); }
+  .codigo pre .u { color: #f07064; }
+  .codigo pre .v { color: var(--verde-claro); }
+  .codigo pre .y { color: var(--amarelo); }
+
+  .passos { padding-left: 1.3em; margin: 0; max-width: 64ch; }
+  .passos li { margin-bottom: .7em; }
+  .passos li::marker { color: var(--amarelo); font-weight: 700; }
+
+  .rodape { padding: 40px 0 56px; border-top: 2px solid var(--linha); background: var(--painel); color: var(--suave); font-size: .95rem; }
+  .rodape .equipe { font-size: 1.1rem; color: var(--texto); }
+
+  @media (max-width: 920px) {
+    .abertura .wrap { grid-template-columns: minmax(0, 1fr); }
+    .codigo { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 600px) {
+    :root { --c: calc((100vw - 64px) / 47); }
+    .wrap { padding: 0 16px; }
+    .abertura { padding: 36px 0 48px; }
+    .jogo { padding: 12px; }
+    .telas { grid-template-columns: 1fr; }
+    .etapas li { grid-template-columns: 44px minmax(0, 1fr); gap: 14px; }
+    .etapas li::before { width: 40px; height: 40px; font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="#">Onde Fica?</a>
+    <nav aria-label="Seções">
+      <a href="#telas">Telas</a>
+      <a href="#como-foi-feito">Como foi feito</a>
+      <a href="#codigo">Código</a>
+      <a href="#rodar">Como rodar</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="abertura">
+    <div class="wrap">
+      <div>
+        <h1>Onde Fica?</h1>
+        <p class="intro">Um jogo de geografia em que você vê um monumento brasileiro e clica no estado onde ele fica.</p>
+        <p class="detalhe">Feito em C com a biblioteca Allegro 5 para o Projeto Integrador do curso de Ciência da Computação. São três perguntas, dez pontos por acerto, dica, tutorial e uma tela final com o resultado.</p>
+        <p class="detalhe">O mapa desta página é o mesmo do jogo: uma matriz de letras em que cada letra é um estado. Experimente responder.</p>
+        <div class="botoes">
+          <a class="botao principal" href="https://github.com/PQueirozDev/PAC-Adventure">Ver o código no GitHub</a>
+          <a class="botao" href="#rodar">Como rodar no computador</a>
+        </div>
+      </div>
+
+      <div class="jogo" aria-label="Mini versão do jogo">
+        <p class="pergunta" id="pergunta">Onde fica o Cristo Redentor?</p>
+        <p class="placar" id="placar">Pergunta 1 de 3 · 0 pontos</p>
+        <div class="mapa" id="mapa" role="img" aria-label="Mapa do Brasil feito de letras. Passe o mouse para ver o nome do estado e clique para responder."></div>
+        <p class="onde" id="onde">Passe o mouse em cima de um estado.</p>
+        <div class="controles">
+          <label for="lista">Ou escolha na lista:</label>
+          <select id="lista"><option value="">Escolher estado…</option></select>
+          <button class="botao" id="proxima" type="button" hidden>Próxima pergunta</button>
+        </div>
+        <p class="resposta" id="resposta" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
+  <section id="telas">
+    <div class="wrap">
+      <h2>Telas do jogo</h2>
+      <p class="sub">Capturas do jogo rodando. A fonte e as cores são as do próprio Allegro: a fonte embutida tem 8 pixels e foi ampliada para os títulos.</p>
+      <div class="telas">
+        <figure>
+          <img src="imagens/0-menu.png" alt="Tela de entrada com o título Onde Fica? e os botões Jogar, Como jogar e Créditos" width="880" height="600" loading="lazy">
+          <figcaption><b>Tela de entrada.</b> Os três botões ficam verdes quando o mouse passa por cima.</figcaption>
+        </figure>
+        <figure>
+          <img src="imagens/0-como-jogar.png" alt="Tela Como jogar com o passo a passo, a legenda de cores e as teclas" width="880" height="600" loading="lazy">
+          <figcaption><b>Como jogar.</b> Passo a passo, o que cada cor do mapa quer dizer e as teclas.</figcaption>
+        </figure>
+        <figure>
+          <img src="imagens/1-pergunta-com-dica.png" alt="Pergunta sobre o Cristo Redentor com a dica aberta e São Paulo destacado no mapa" width="880" height="600" loading="lazy">
+          <figcaption><b>Pergunta com dica.</b> A tecla D mostra a dica. O estado embaixo do mouse fica verde-claro.</figcaption>
+        </figure>
+        <figure>
+          <img src="imagens/2-acerto.png" alt="Mensagem de acerto com o Rio de Janeiro em amarelo no mapa" width="880" height="600" loading="lazy">
+          <figcaption><b>Acerto.</b> Mais dez pontos, o estado certo em amarelo e uma curiosidade sobre o monumento.</figcaption>
+        </figure>
+        <figure>
+          <img src="imagens/3-erro.png" alt="Mensagem de erro com São Paulo em vermelho e o Rio de Janeiro em amarelo" width="880" height="600" loading="lazy">
+          <figcaption><b>Erro.</b> A escolha errada fica vermelha e o jogo mostra qual era a resposta.</figcaption>
+        </figure>
+        <figure>
+          <img src="imagens/4-tela-final.png" alt="Tela final com 20 de 30 pontos e o resultado de cada pergunta" width="880" height="600" loading="lazy">
+          <figcaption><b>Tela final.</b> Pontuação, acertos e o resultado de cada monumento. R ou Enter começam de novo.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-foi-feito">
+    <div class="wrap">
+      <h2>Como foi feito</h2>
+      <p class="sub">O jogo cresceu em etapas. Cada uma foi testada antes de começar a próxima.</p>
+      <ol class="etapas">
+        <li>
+          <div>
+            <h3>Prova de conceito</h3>
+            <p>A primeira versão tinha uma pergunta só, o Cristo Redentor, e um mapa feito de 27 retângulos com as siglas, organizados mais ou menos na posição de cada estado. Serviu para testar o Allegro: abrir a janela, carregar a foto e ler o clique do mouse.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Perguntas e pontuação</h3>
+            <p>Entraram o Teatro Amazonas e o Congresso Nacional, um de cada região. Os dados de cada pergunta ficam em vetores paralelos: o monumento, a foto, a resposta, a dica e a curiosidade usam a mesma posição. Cada acerto vale dez pontos e, no fim, uma tela mostra o resultado.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Mapa no formato do Brasil</h3>
+            <p>Os retângulos viraram uma matriz de letras desenhada a partir do contorno real dos estados. Cada letra vira um quadradinho de 8 pixels, e as fronteiras aparecem onde a letra do vizinho é diferente. O Distrito Federal e Sergipe foram um pouco aumentados para dar para clicar.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Tela de entrada</h3>
+            <p>Por último vieram o menu com os botões Jogar, Como jogar e Créditos. Uma variável chamada <code>tela</code> guarda em qual tela o jogo está, e o laço principal desenha só aquela.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="codigo">
+    <div class="wrap">
+      <h2>Por dentro do código</h2>
+      <p class="sub">Todo o jogo está em um arquivo, <code>main.c</code>, usando só variáveis, vetores, matrizes, condicionais, laços e algumas funções pequenas.</p>
+      <div class="codigo">
+        <div>
+          <h3>O mapa é texto</h3>
+          <p>Cada linha da matriz é um texto e cada letra é um estado. O ponto é o mar. Este é um pedaço do Sudeste:</p>
+<pre><span class="com">// U = SP   V = MG   Y = RJ   . = mar</span>
+"OO<span class="u">UUUUUUU</span><span class="v">VVVV</span><span class="y">YYY</span>.......",
+"OXX<span class="u">UUUUUU</span><span class="v">V</span><span class="u">U</span><span class="y">YYY</span>.........",</pre>
+        </div>
+        <div>
+          <h3>Qual estado foi clicado</h3>
+          <p>A posição do mouse é dividida pelo tamanho do quadradinho. Como a divisão é entre inteiros, o resultado já é a linha e a coluna da matriz.</p>
+<pre>int coluna = (x - MAPA_X) / CELULA;
+int linha  = (y - MAPA_Y) / CELULA;
+<span class="com">// a letra nessa posição diz o estado</span>
+return estado_da_letra(mapa[linha][coluna]);</pre>
+        </div>
+        <div>
+          <h3>Pontuação</h3>
+          <p>Se o estado clicado é a resposta da pergunta atual, somam-se dez pontos. O clique só vale uma vez por pergunta.</p>
+<pre>if (escolhido == respostas[pergunta]) {
+    pontos = pontos + PONTOS_POR_ACERTO;
+    acertos++;
+}</pre>
+        </div>
+        <div>
+          <h3>Troca de telas</h3>
+          <p>Cada tela tem um número com nome. Para trocar de tela, basta mudar o valor da variável.</p>
+<pre>#define TELA_MENU     0
+#define TELA_TUTORIAL 1
+#define TELA_CREDITOS 2
+#define TELA_JOGO     3
+#define TELA_FIM      4</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rodar">
+    <div class="wrap">
+      <h2>Como rodar</h2>
+      <p class="sub">Precisa do Visual Studio 2022 com a carga de trabalho Desenvolvimento para desktop com C++.</p>
+      <ol class="passos">
+        <li>Baixe ou clone o <a href="https://github.com/PQueirozDev/PAC-Adventure">repositório no GitHub</a>.</li>
+        <li>Abra o arquivo <code>JogoAllegro.sln</code>.</li>
+        <li>Aperte F5. O Visual Studio baixa o Allegro sozinho pelo NuGet. Se não baixar, clique com o botão direito na solução e escolha Restaurar Pacotes NuGet.</li>
+        <li>As fotos dos monumentos precisam estar na mesma pasta do <code>main.c</code>.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <div class="wrap">
+    <p class="equipe">Desenvolvido por Arthur Pimentel, Christopher Nithigale e Pedro Queiroz.</p>
+    <p>Projeto Integrador — Ciência da Computação.</p>
+    <p>Foto do Cristo Redentor: Artyominc, <a href="https://commons.wikimedia.org/wiki/File:Christ_on_Corcovado_mountain.JPG">Wikimedia Commons</a>, licença CC BY-SA 3.0.</p>
+  </div>
+</footer>
+
+<script>
+  // Mesmos dados do main.c
+  var MAPA = [ "................A..............................", "..............AAA..............................", "............AAAAA.........BB...................", "............AAAAA.....D..BBB...................", ".....CCC....CCAAAA.DDDDDBBBBB..................", ".....CCCCCCCCCAAAADDDDDDDBBBB..................", ".....CCCCCCCCCAAACDDDDDDDBBDDD.................", ".....CCCCCCCCCACCCCDDDDDDDBDDDDDD..............", ".....CCCCCCCCCCCCCCCDDDDDDDDDDDDDEE............", ".....CCCCCCCCCCCCCCCCDDDDDDDDDDDDEEEEE.........", ".....CCCCCCCCCCCCCCCCDDDDDDDDDDDEEEEEELFFF.....", "...CCCCCCCCCCCCCCCCCDDDDDDDDDDDDEEEEELLFFFF....", ".CCCCCCCCCCCCCCCCCCCDDDDDDDDDDDEEEEEELLFFFFGGG.", ".CCCCCCCCCCCCCCCCCCDDDDDDDDDDDDKEEEEELLLFFFGGGG", "CCCCCCCCCCCCCCCCCCCDDDDDDDDDDDKKEEEELLLLFFNNNNN", "HHCCCCCCCCCCCCCCCCCDDDDDDDDDDDKKEELLLLLLMMMNNNN", ".HHHHCCCCCCCIICCCCCJDDDDDDDDDKKKKELLLLLMMMMMMMM", ".HHHHHHCCCCIIIIJJJJJJDDDDDDDDKKKKELLLLRRRRTTTT.", "....HHHHH.IIIIIJJJJJJJJJJJJJKKKKKELLRRRRRRSST..", "....HHH...IIIIIIJJJJJJJJJJJJKKKKKRRRRRRRRRSS...", "...........IIIIIIJJJJJJJJJJJKKKKKRRRRRRRRRRR...", ".............IIIIJJJJJJJJJJJKKKKKRRRRRRRRRR....", "...............IJJJJJJJJJJJJPPPPPRRRRRRRRR.....", "................JJJJJJJJJJJJPPPPPRRVRRRRRR.....", "................JJJJJJJJJJJPPPPPPVVVVVRRRR.....", ".................JJJJJJJJJPPPPPQQVVVVVVVVR.....", "...................JJJJJJPPPPPPQQVVVVVVVRR.....", "...................JOOOOJPPPPPPPVVVVVVVVRR.....", "...................OOOOOOPPPPVVVVVVVVVVWW......", "...................OOOOOOOOPVVVVVVVVVVVWW......", "...................OOOOOOOOUUUUUVVVVVVVWW......", "...................OOOOOOOOUUUUUVVVVVVYW.......", "...................OOOOOOOUUUUUUUVVVVYYY.......", "......................OOOXXUUUUUUVUYYY.........", "......................OOXXXXXUUUUUU............", ".......................XXXXXXXUU...............", ".......................XXXXXXXX................", "........................XXXXZXZ................", "........................ZZZZZZZ................", ".......................####ZZZZ................", ".....................########Z.................", "....................#########..................", "....................#########..................", "......................#####....................", "........................##.....................", ".........................#....................." ];
+  var LETRAS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
+  var SIGLAS = ["RR","AP","AM","PA","MA","CE","RN","AC","RO","MT","TO","PI","PE","PB","MS","GO","DF","BA","SE","AL","SP","MG","ES","PR","RJ","SC","RS"];
+  var NOMES = ["Roraima","Amapá","Amazonas","Pará","Maranhão","Ceará","Rio Grande do Norte","Acre","Rondônia","Mato Grosso","Tocantins","Piauí","Pernambuco","Paraíba","Mato Grosso do Sul","Goiás","Distrito Federal","Bahia","Sergipe","Alagoas","São Paulo","Minas Gerais","Espírito Santo","Paraná","Rio de Janeiro","Santa Catarina","Rio Grande do Sul"];
+  var PERGUNTAS = [
+    { monumento: "Cristo Redentor", resposta: 24, curiosidade: "Inaugurado em 1931, fica no alto do morro do Corcovado." },
+    { monumento: "Teatro Amazonas", resposta: 2, curiosidade: "Inaugurado em 1896 em Manaus, na época do ciclo da borracha." },
+    { monumento: "Congresso Nacional", resposta: 16, curiosidade: "Projetado por Oscar Niemeyer e inaugurado em 1960 em Brasília." }
+  ];
+
+  var linhas = MAPA.length, colunas = MAPA[0].length;
+  var mapaEl = document.getElementById("mapa");
+  var ondeEl = document.getElementById("onde");
+  var respostaEl = document.getElementById("resposta");
+  var perguntaEl = document.getElementById("pergunta");
+  var placarEl = document.getElementById("placar");
+  var proximaEl = document.getElementById("proxima");
+  var listaEl = document.getElementById("lista");
+  mapaEl.style.setProperty("--colunas", colunas);
+
+  var celulasDoEstado = [];
+  for (var i = 0; i < SIGLAS.length; i++) celulasDoEstado.push([]);
+
+  function letraEm(l, c) {
+    if (l < 0 || c < 0 || l >= linhas || c >= colunas) return ".";
+    return MAPA[l][c];
+  }
+
+  // desenha a matriz: cada letra vira um quadradinho
+  for (var l = 0; l < linhas; l++) {
+    for (var c = 0; c < colunas; c++) {
+      var letra = MAPA[l][c];
+      var cel = document.createElement("div");
+      cel.textContent = letra;
+      if (letra === ".") {
+        cel.className = "cel mar";
+      } else {
+        var e = LETRAS.indexOf(letra);
+        cel.className = "cel terra";
+        cel.dataset.estado = e;
+        // fronteira onde o vizinho e diferente
+        cel.style.borderTopWidth = letraEm(l - 1, c) !== letra ? "1px" : "0";
+        cel.style.borderBottomWidth = letraEm(l + 1, c) !== letra ? "1px" : "0";
+        cel.style.borderLeftWidth = letraEm(l, c - 1) !== letra ? "1px" : "0";
+        cel.style.borderRightWidth = letraEm(l, c + 1) !== letra ? "1px" : "0";
+        celulasDoEstado[e].push(cel);
+      }
+      mapaEl.appendChild(cel);
+    }
+  }
+
+  var ordemAlfabetica = NOMES.map(function (n, i) { return i; }).sort(function (a, b) { return NOMES[a].localeCompare(NOMES[b], "pt-BR"); });
+  ordemAlfabetica.forEach(function (i) {
+    var op = document.createElement("option");
+    op.value = i;
+    op.textContent = NOMES[i] + " (" + SIGLAS[i] + ")";
+    listaEl.appendChild(op);
+  });
+
+  var pergunta = 0, pontos = 0, escolhido = -1, emCima = -1;
+
+  function pintar(estado, classe, ligar) {
+    if (estado < 0) return;
+    celulasDoEstado[estado].forEach(function (c) { c.classList.toggle(classe, ligar); });
+  }
+
+  function mostrarPergunta() {
+    var p = PERGUNTAS[pergunta];
+    perguntaEl.textContent = "Onde fica o " + p.monumento + "?";
+    placarEl.textContent = "Pergunta " + (pergunta + 1) + " de " + PERGUNTAS.length + " · " + pontos + " pontos";
+    respostaEl.textContent = "";
+    proximaEl.hidden = true;
+    listaEl.disabled = false;
+    listaEl.value = "";
+  }
+
+  function responder(estado) {
+    if (escolhido !== -1 || pergunta >= PERGUNTAS.length) return;
+    escolhido = estado;
+    pintar(emCima, "mouse", false);
+    var p = PERGUNTAS[pergunta];
+    pintar(p.resposta, "certo", true);
+    if (estado === p.resposta) {
+      pontos += 10;
+      respostaEl.innerHTML = '<strong class="ok">Acertou! +10 pontos.</strong> ' + p.curiosidade;
+    } else {
+      pintar(estado, "errado", true);
+      respostaEl.innerHTML = '<strong class="nao">Quase!</strong> Você escolheu ' + NOMES[estado] + ', mas a resposta era ' + NOMES[p.resposta] + '. ' + p.curiosidade;
+    }
+    placarEl.textContent = "Pergunta " + (pergunta + 1) + " de " + PERGUNTAS.length + " · " + pontos + " pontos";
+    listaEl.disabled = true;
+    proximaEl.textContent = pergunta < PERGUNTAS.length - 1 ? "Próxima pergunta" : "Ver resultado";
+    proximaEl.hidden = false;
+    proximaEl.focus();
+  }
+
+  proximaEl.addEventListener("click", function () {
+    var p = PERGUNTAS[Math.min(pergunta, PERGUNTAS.length - 1)];
+    pintar(p.resposta, "certo", false);
+    pintar(escolhido, "errado", false);
+    escolhido = -1;
+    if (pergunta >= PERGUNTAS.length) {
+      pergunta = 0; pontos = 0; mostrarPergunta(); return;
+    }
+    pergunta++;
+    if (pergunta < PERGUNTAS.length) {
+      mostrarPergunta();
+    } else {
+      perguntaEl.textContent = "Fim de jogo!";
+      placarEl.textContent = "Você fez " + pontos + " de " + (PERGUNTAS.length * 10) + " pontos.";
+      respostaEl.textContent = pontos === 30 ? "Gabaritou! No jogo completo tem foto de cada monumento." : "No jogo completo tem foto e dica de cada monumento.";
+      proximaEl.textContent = "Jogar de novo";
+      listaEl.disabled = true;
+      escolhido = 99;
+    }
+  });
+
+  mapaEl.addEventListener("mouseover", function (ev) {
+    var est = ev.target.dataset ? ev.target.dataset.estado : undefined;
+    var novo = est === undefined ? -1 : Number(est);
+    if (novo === emCima) return;
+    pintar(emCima, "mouse", false);
+    emCima = novo;
+    if (escolhido === -1) pintar(emCima, "mouse", true);
+    ondeEl.textContent = novo === -1 ? "Mar." : NOMES[novo] + " (" + SIGLAS[novo] + ") — letra " + LETRAS[novo] + " na matriz";
+  });
+  mapaEl.addEventListener("mouseleave", function () {
+    pintar(emCima, "mouse", false);
+    emCima = -1;
+    ondeEl.textContent = "Passe o mouse em cima de um estado.";
+  });
+  mapaEl.addEventListener("click", function (ev) {
+    var est = ev.target.dataset ? ev.target.dataset.estado : undefined;
+    if (est !== undefined) responder(Number(est));
+  });
+  listaEl.addEventListener("change", function () {
+    if (listaEl.value !== "") responder(Number(listaEl.value));
+  });
+
+  mostrarPergunta();
+</script>
+</body>
+</html>

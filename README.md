@@ -77,6 +77,8 @@ O jogo tem **3 perguntas**, uma para cada monumento:
 - **Pontuação:** se o estado clicado for igual à resposta da pergunta, o jogo soma 10 em `pontos` e 1 em `acertos`.
 - **Fotos:** cada monumento tem um arquivo de imagem na mesma pasta do `main.c`. Se uma foto não for encontrada, o jogo **não fecha**: ele mostra um quadro com o nome do arquivo que falta.
 
+O site do projeto fica na pasta `docs/` e pode ser publicado pelo GitHub Pages.
+
 Todo o código está em um único arquivo, `main.c`. A explicação do código está em [`EXPLICACAO.md`](EXPLICACAO.md).
 
 ## Como executar
@@ -106,8 +108,7 @@ Para adicionar uma foto nova:
 
 ## Equipe
 
-- **Desenvolvido por:** Arthur Pimentel, Christopher Nithigale e Pedro Queiroz
-- **Arte visual:** Christopher e Arthur
+Desenvolvido por Arthur Pimentel, Christopher Nithigale e Pedro Queiroz.
 
 ## Crédito das imagens
 

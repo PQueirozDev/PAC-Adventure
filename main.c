@@ -352,11 +352,8 @@ int main()
                 escrever_grande(fonte, branco, LARGURA / 2, 145 + i * 28, 2, desenvolvedores[i]);
             }
 
-            al_draw_text(fonte, amarelo, LARGURA / 2, 250, ALLEGRO_ALIGN_CENTRE, "ARTE VISUAL");
-            escrever_grande(fonte, branco, LARGURA / 2, 270, 2, "Christopher e Arthur");
-
-            al_draw_text(fonte, amarelo, LARGURA / 2, 330, ALLEGRO_ALIGN_CENTRE, "FOTO DO CRISTO REDENTOR");
-            al_draw_text(fonte, branco, LARGURA / 2, 350, ALLEGRO_ALIGN_CENTRE,
+            al_draw_text(fonte, amarelo, LARGURA / 2, 280, ALLEGRO_ALIGN_CENTRE, "FOTO DO CRISTO REDENTOR");
+            al_draw_text(fonte, branco, LARGURA / 2, 300, ALLEGRO_ALIGN_CENTRE,
                 "Artyominc - Wikimedia Commons (CC BY-SA 3.0)");
 
             al_draw_line(LARGURA / 2 - 150, 400, LARGURA / 2 + 150, 400, borda, 2);
