@@ -10,6 +10,27 @@
 #define TOTAL_PERGUNTAS 3   // quantidade de monumentos (perguntas) do jogo
 #define PONTOS_POR_ACERTO 10
 
+// Telas do jogo: a variavel "tela" guarda um destes numeros
+#define TELA_MENU 0      // tela de entrada
+#define TELA_TUTORIAL 1  // como jogar
+#define TELA_CREDITOS 2  // creditos
+#define TELA_JOGO 3      // perguntas
+#define TELA_FIM 4       // resultado final
+
+// Botoes da tela de entrada
+#define TOTAL_BOTOES 3
+#define BOTAO_L 260                    // largura do botao
+#define BOTAO_A 50                     // altura do botao
+#define BOTAO_X ((LARGURA - BOTAO_L) / 2)
+#define BOTAO_Y 250                    // altura do primeiro botao
+#define BOTAO_ESPACO 70                // distancia entre um botao e outro
+
+// Botao VOLTAR (tutorial e creditos)
+#define VOLTAR_L 180
+#define VOLTAR_A 44
+#define VOLTAR_X ((LARGURA - VOLTAR_L) / 2)
+#define VOLTAR_Y 520
+
 // ===== MAPA DO BRASIL =====
 // O mapa e uma matriz de letras. Cada letra e um estado e cada letra
 // vira um quadradinho de CELULA x CELULA pixels na tela. O ponto '.' e o mar.
@@ -117,6 +138,30 @@ void escrever_grande(ALLEGRO_FONT *fonte, ALLEGRO_COLOR cor, float x, float y, i
     al_use_transform(&t);
 }
 
+// Devolve 1 se o mouse (mx, my) esta dentro do retangulo, ou 0 se esta fora.
+int mouse_dentro(int mx, int my, int x, int y, int largura, int altura)
+{
+    if (mx >= x && mx <= x + largura && my >= y && my <= y + altura) {
+        return 1;
+    }
+    return 0;
+}
+
+// Desenha um botao com o texto no meio.
+// Se "destacado" for 1 (mouse em cima), o botao fica verde com borda amarela.
+void desenhar_botao(ALLEGRO_FONT *fonte, char *texto, int x, int y, int largura, int altura, int destacado)
+{
+    ALLEGRO_COLOR cor_fundo = al_map_rgb(32, 46, 88);
+    ALLEGRO_COLOR cor_borda = al_map_rgb(80, 100, 160);
+    if (destacado) {
+        cor_fundo = al_map_rgb(70, 150, 80);
+        cor_borda = al_map_rgb(240, 200, 40);
+    }
+    al_draw_filled_rounded_rectangle(x, y, x + largura, y + altura, 10, 10, cor_fundo);
+    al_draw_rounded_rectangle(x, y, x + largura, y + altura, 10, 10, cor_borda, 3);
+    escrever_grande(fonte, al_map_rgb(255, 255, 255), x + largura / 2, y + altura / 2 - 8, 2, texto);
+}
+
 int main()
 {
     al_init();
@@ -205,6 +250,20 @@ int main()
         }
     }
 
+    // ===== TEXTOS DAS TELAS DE ENTRADA =====
+    char *botoes[TOTAL_BOTOES] = { "JOGAR", "COMO JOGAR", "CREDITOS" };
+
+    char *tutorial[6] = {
+        "1. Olhe a foto e o nome do monumento.",
+        "2. Clique no estado do mapa onde voce acha que ele fica.",
+        "3. Acertou? Voce ganha 10 pontos.",
+        "4. Errou? O estado certo aparece em amarelo no mapa.",
+        "5. Aperte ENTER para ir para a proxima pergunta.",
+        "6. Sao 3 perguntas. No final aparece a sua pontuacao."
+    };
+
+    char *desenvolvedores[3] = { "Arthur Pimentel", "Christopher Nithigale", "Pedro Queiroz" };
+
     // ===== VARIAVEIS DO JOGO =====
     int pergunta = 0;   // qual pergunta esta na tela (0, 1 ou 2)
     int pontos = 0;     // pontuacao: +10 por acerto
@@ -212,7 +271,8 @@ int main()
     int acertou[TOTAL_PERGUNTAS] = { 0 }; // 1 = acertou aquela pergunta, 0 = errou
     int escolhido = -1; // -1 = ainda nao clicou
     int dica = 0;       // 1 = mostrar a dica
-    int fim_de_jogo = 0; // 1 = mostrar a tela final
+    int tela = TELA_MENU; // o jogo comeca na tela de entrada
+    int novo_jogo = 0;  // 1 = zerar tudo e comecar as perguntas
     int mouse_x = 0;    // posicao atual do mouse (para destacar o estado)
     int mouse_y = 0;
     int rodando = 1;
@@ -231,7 +291,82 @@ int main()
 
         al_clear_to_color(fundo);
 
-        if (fim_de_jogo) {
+        if (tela == TELA_MENU) {
+            // ===== TELA DE ENTRADA (MENU) =====
+            escrever_grande(fonte, amarelo, LARGURA / 2, 80, 7, "ONDE FICA?");
+            al_draw_text(fonte, branco, LARGURA / 2, 160, ALLEGRO_ALIGN_CENTRE,
+                "Descubra em qual estado ficam os monumentos do Brasil!");
+            al_draw_line(LARGURA / 2 - 200, 190, LARGURA / 2 + 200, 190, borda, 2);
+
+            // desenha os 3 botoes, um embaixo do outro
+            for (int b = 0; b < TOTAL_BOTOES; b++) {
+                int y = BOTAO_Y + b * BOTAO_ESPACO;
+                int destacado = mouse_dentro(mouse_x, mouse_y, BOTAO_X, y, BOTAO_L, BOTAO_A);
+                desenhar_botao(fonte, botoes[b], BOTAO_X, y, BOTAO_L, BOTAO_A, destacado);
+            }
+
+            al_draw_text(fonte, cinza, LARGURA / 2, 540, ALLEGRO_ALIGN_CENTRE, "Clique em um botao. ESC = sair");
+            al_draw_text(fonte, cinza, LARGURA / 2, 565, ALLEGRO_ALIGN_CENTRE, "Projeto Integrador");
+        }
+        else if (tela == TELA_TUTORIAL) {
+            // ===== TELA COMO JOGAR =====
+            al_draw_filled_rounded_rectangle(80, 30, LARGURA - 80, 500, 12, 12, painel);
+            al_draw_rounded_rectangle(80, 30, LARGURA - 80, 500, 12, 12, borda, 3);
+            escrever_grande(fonte, amarelo, LARGURA / 2, 55, 4, "COMO JOGAR");
+
+            // escreve cada linha do vetor tutorial
+            for (int i = 0; i < 6; i++) {
+                al_draw_text(fonte, branco, 130, 120 + i * 28, 0, tutorial[i]);
+            }
+
+            // legenda das cores do mapa
+            al_draw_text(fonte, amarelo, 130, 305, 0, "CORES DO MAPA");
+            al_draw_filled_rectangle(130, 325, 146, 341, al_map_rgb(130, 210, 140));
+            al_draw_text(fonte, branco, 160, 330, 0, "mouse em cima do estado");
+            al_draw_filled_rectangle(130, 350, 146, 366, amarelo);
+            al_draw_text(fonte, branco, 160, 355, 0, "resposta certa");
+            al_draw_filled_rectangle(130, 375, 146, 391, al_map_rgb(210, 60, 50));
+            al_draw_text(fonte, branco, 160, 380, 0, "escolha errada");
+
+            // teclas
+            al_draw_text(fonte, amarelo, 470, 305, 0, "TECLAS");
+            al_draw_text(fonte, branco, 470, 330, 0, "D     = mostrar uma dica");
+            al_draw_text(fonte, branco, 470, 355, 0, "ENTER = proxima pergunta");
+            al_draw_text(fonte, branco, 470, 380, 0, "R     = reiniciar o jogo");
+            al_draw_text(fonte, branco, 470, 405, 0, "ESC   = voltar ao menu");
+
+            al_draw_text(fonte, cinza, LARGURA / 2, 455, ALLEGRO_ALIGN_CENTRE,
+                "Dica: os estados pequenos do litoral tem a sigla escrita no mar.");
+
+            desenhar_botao(fonte, "VOLTAR", VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A,
+                mouse_dentro(mouse_x, mouse_y, VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A));
+        }
+        else if (tela == TELA_CREDITOS) {
+            // ===== TELA DE CREDITOS =====
+            al_draw_filled_rounded_rectangle(160, 30, LARGURA - 160, 500, 12, 12, painel);
+            al_draw_rounded_rectangle(160, 30, LARGURA - 160, 500, 12, 12, borda, 3);
+            escrever_grande(fonte, amarelo, LARGURA / 2, 55, 4, "CREDITOS");
+
+            al_draw_text(fonte, amarelo, LARGURA / 2, 125, ALLEGRO_ALIGN_CENTRE, "DESENVOLVIDO POR");
+            for (int i = 0; i < 3; i++) {
+                escrever_grande(fonte, branco, LARGURA / 2, 145 + i * 28, 2, desenvolvedores[i]);
+            }
+
+            al_draw_text(fonte, amarelo, LARGURA / 2, 250, ALLEGRO_ALIGN_CENTRE, "ARTE VISUAL");
+            escrever_grande(fonte, branco, LARGURA / 2, 270, 2, "Christopher e Arthur");
+
+            al_draw_text(fonte, amarelo, LARGURA / 2, 330, ALLEGRO_ALIGN_CENTRE, "FOTO DO CRISTO REDENTOR");
+            al_draw_text(fonte, branco, LARGURA / 2, 350, ALLEGRO_ALIGN_CENTRE,
+                "Artyominc - Wikimedia Commons (CC BY-SA 3.0)");
+
+            al_draw_line(LARGURA / 2 - 150, 400, LARGURA / 2 + 150, 400, borda, 2);
+            al_draw_text(fonte, cinza, LARGURA / 2, 420, ALLEGRO_ALIGN_CENTRE, "Projeto Integrador");
+            al_draw_text(fonte, cinza, LARGURA / 2, 440, ALLEGRO_ALIGN_CENTRE, "Feito em C com Allegro 5");
+
+            desenhar_botao(fonte, "VOLTAR", VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A,
+                mouse_dentro(mouse_x, mouse_y, VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A));
+        }
+        else if (tela == TELA_FIM) {
             // ===== TELA FINAL =====
             char texto[60]; // guarda um texto montado com numeros
 
@@ -282,7 +417,7 @@ int main()
             }
 
             al_draw_text(fonte, cinza, LARGURA / 2, 500, ALLEGRO_ALIGN_CENTRE,
-                "R ou ENTER = jogar de novo     ESC = sair");
+                "R ou ENTER = jogar de novo     ESC = menu");
         }
         else {
             // ===== TELA DA PERGUNTA =====
@@ -291,7 +426,7 @@ int main()
             al_draw_filled_rectangle(0, 0, LARGURA, 56, painel);
             al_draw_line(0, 56, LARGURA, 56, borda, 2);
             escrever_grande(fonte, amarelo, 140, 16, 3, "ONDE FICA?");
-            al_draw_text(fonte, cinza, 440, 24, ALLEGRO_ALIGN_CENTRE, "D = dica   R = reiniciar   ESC = sair");
+            al_draw_text(fonte, cinza, 440, 24, ALLEGRO_ALIGN_CENTRE, "D = dica   R = reiniciar   ESC = menu");
             al_draw_textf(fonte, branco, LARGURA - 20, 14, ALLEGRO_ALIGN_RIGHT,
                 "Pergunta %d de %d", pergunta + 1, TOTAL_PERGUNTAS);
             al_draw_textf(fonte, amarelo, LARGURA - 20, 34, ALLEGRO_ALIGN_RIGHT,
@@ -422,26 +557,24 @@ int main()
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             int tecla = evento.keyboard.keycode;
 
+            int enter = (tecla == ALLEGRO_KEY_ENTER || tecla == ALLEGRO_KEY_PAD_ENTER);
+
             if (tecla == ALLEGRO_KEY_ESCAPE) {
-                rodando = 0;
+                if (tela == TELA_MENU) {
+                    rodando = 0;      // no menu, ESC fecha o jogo
+                }
+                else {
+                    tela = TELA_MENU; // nas outras telas, ESC volta ao menu
+                }
             }
-            else if (tecla == ALLEGRO_KEY_D && !fim_de_jogo) {
+            else if (tecla == ALLEGRO_KEY_D && tela == TELA_JOGO) {
                 dica = 1;
             }
-            else if (tecla == ALLEGRO_KEY_R ||
-                     (fim_de_jogo && (tecla == ALLEGRO_KEY_ENTER || tecla == ALLEGRO_KEY_PAD_ENTER))) {
-                // reinicia o jogo inteiro: volta para a primeira pergunta e zera tudo
-                pergunta = 0;
-                pontos = 0;
-                acertos = 0;
-                for (int p = 0; p < TOTAL_PERGUNTAS; p++) {
-                    acertou[p] = 0;
-                }
-                escolhido = -1;
-                dica = 0;
-                fim_de_jogo = 0;
+            else if ((tecla == ALLEGRO_KEY_R && (tela == TELA_JOGO || tela == TELA_FIM)) ||
+                     (enter && tela == TELA_FIM)) {
+                novo_jogo = 1;        // reinicia o jogo inteiro
             }
-            else if ((tecla == ALLEGRO_KEY_ENTER || tecla == ALLEGRO_KEY_PAD_ENTER) && escolhido != -1) {
+            else if (enter && tela == TELA_JOGO && escolhido != -1) {
                 // so passa de pergunta depois que o jogador ja respondeu
                 if (pergunta < TOTAL_PERGUNTAS - 1) {
                     pergunta++;      // vai para a proxima pergunta
@@ -449,7 +582,7 @@ int main()
                     dica = 0;
                 }
                 else {
-                    fim_de_jogo = 1; // era a ultima: mostra a tela final
+                    tela = TELA_FIM; // era a ultima: mostra a tela final
                 }
             }
         }
@@ -458,7 +591,31 @@ int main()
             mouse_x = evento.mouse.x;
             mouse_y = evento.mouse.y;
         }
-        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && escolhido == -1 && !fim_de_jogo) {
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && tela == TELA_MENU) {
+            // ve em qual botao do menu o jogador clicou
+            for (int b = 0; b < TOTAL_BOTOES; b++) {
+                int y = BOTAO_Y + b * BOTAO_ESPACO;
+                if (mouse_dentro(evento.mouse.x, evento.mouse.y, BOTAO_X, y, BOTAO_L, BOTAO_A)) {
+                    if (b == 0) {
+                        novo_jogo = 1;          // JOGAR
+                    }
+                    else if (b == 1) {
+                        tela = TELA_TUTORIAL;   // COMO JOGAR
+                    }
+                    else {
+                        tela = TELA_CREDITOS;   // CREDITOS
+                    }
+                }
+            }
+        }
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN &&
+                 (tela == TELA_TUTORIAL || tela == TELA_CREDITOS)) {
+            // botao VOLTAR
+            if (mouse_dentro(evento.mouse.x, evento.mouse.y, VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A)) {
+                tela = TELA_MENU;
+            }
+        }
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && tela == TELA_JOGO && escolhido == -1) {
             // ve em qual estado o mouse clicou (-1 se clicou no mar ou fora do mapa)
             escolhido = estado_na_tela(evento.mouse.x, evento.mouse.y);
 
@@ -468,6 +625,20 @@ int main()
                 acertos++;
                 acertou[pergunta] = 1;
             }
+        }
+
+        // comeca um jogo novo: volta para a primeira pergunta e zera tudo
+        if (novo_jogo) {
+            pergunta = 0;
+            pontos = 0;
+            acertos = 0;
+            for (int p = 0; p < TOTAL_PERGUNTAS; p++) {
+                acertou[p] = 0;
+            }
+            escolhido = -1;
+            dica = 0;
+            tela = TELA_JOGO;
+            novo_jogo = 0;
         }
     }
 

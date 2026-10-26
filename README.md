@@ -6,6 +6,18 @@ O jogo mostra um monumento famoso do Brasil e um mapa. O jogador clica no estado
 
 ## Telas do jogo
 
+**Tela de entrada** — botões para jogar, ver como jogar e ver os créditos.
+
+![Tela de entrada](imagens/0-menu.png)
+
+**Como jogar** — passo a passo, cores do mapa e teclas.
+
+![Como jogar](imagens/0-como-jogar.png)
+
+**Créditos**
+
+![Créditos](imagens/0-creditos.png)
+
 **Pergunta com dica** — o estado embaixo do mouse fica verde-claro e a tecla `D` mostra a dica.
 
 ![Pergunta com dica](imagens/1-pergunta-com-dica.png)
@@ -34,6 +46,7 @@ O jogo tem **3 perguntas**, uma para cada monumento:
 
 ## Funcionalidades
 
+- **Tela de entrada** com os botões **Jogar**, **Como jogar** e **Créditos**. O botão embaixo do mouse fica verde.
 - **Três perguntas em sequência**, com a foto e o nome de cada monumento.
 - **Pontuação:** cada acerto vale **10 pontos** (máximo de 30). O placar aparece no canto superior direito.
 - **Mensagens de acerto e erro:** ao acertar aparece "ACERTOU! +10 pontos"; ao errar aparece qual era a resposta certa. Nos dois casos o jogo mostra uma curiosidade sobre o monumento.
@@ -47,12 +60,14 @@ O jogo tem **3 perguntas**, uma para cada monumento:
 
 | Ação | Tecla / mouse |
 |---|---|
+| Escolher um botão do menu | Clique com o botão esquerdo |
 | Escolher um estado | Clique com o botão esquerdo no mapa |
 | Mostrar dica | `D` |
 | Próxima pergunta (depois de responder) | `Enter` |
 | Reiniciar o jogo (volta à pergunta 1 e zera os pontos) | `R` |
 | Jogar de novo na tela final | `R` ou `Enter` |
-| Sair | `Esc` |
+| Voltar ao menu | `Esc` ou botão **Voltar** |
+| Sair (na tela de entrada) | `Esc` |
 
 ## Como funciona
 
@@ -89,10 +104,15 @@ Para adicionar uma foto nova:
 4. Para rodar o `.exe` direto (fora do Visual Studio), as fotos precisam estar ao lado do executável.
 5. Anote o crédito da foto na seção abaixo.
 
+## Equipe
+
+- **Desenvolvido por:** Arthur Pimentel, Christopher Nithigale e Pedro Queiroz
+- **Arte visual:** Christopher e Arthur
+
 ## Crédito das imagens
 
 Foto do Cristo Redentor: "Christ on Corcovado mountain", de Artyominc, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Christ_on_Corcovado_mountain.JPG), licença [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). A imagem foi recortada.
 
 ## Limites
 
-Três perguntas fixas, sem sons, animações, menus, ranking ou cronômetro. Os textos na tela estão sem acentos para evitar problemas de codificação com a fonte embutida do Allegro.
+Três perguntas fixas, sem sons, animações, ranking ou cronômetro. Os textos na tela estão sem acentos para evitar problemas de codificação com a fonte embutida do Allegro.

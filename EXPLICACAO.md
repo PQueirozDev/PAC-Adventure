@@ -8,12 +8,13 @@ Este documento explica o jogo para a apresentação. Todo o código está no arq
 
 O jogo funciona assim:
 
-1. Mostra a foto de um monumento e um mapa do Brasil feito com retângulos.
-2. O jogador clica no estado onde acha que o monumento fica.
-3. O jogo diz se acertou ou errou e soma os pontos.
-4. O jogador aperta `Enter` para ir à próxima pergunta.
-5. Depois da 3ª pergunta aparece a tela final com o resultado.
-6. Na tela final, `R` ou `Enter` começam tudo de novo.
+1. Abre na tela de entrada, com os botões Jogar, Como jogar e Créditos.
+2. Mostra a foto de um monumento e um mapa do Brasil feito com quadradinhos.
+3. O jogador clica no estado onde acha que o monumento fica.
+4. O jogo diz se acertou ou errou e soma os pontos.
+5. O jogador aperta `Enter` para ir à próxima pergunta.
+6. Depois da 3ª pergunta aparece a tela final com o resultado.
+7. Na tela final, `R` ou `Enter` começam tudo de novo.
 
 ---
 
@@ -27,17 +28,20 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 | `#define` | Cria constantes: tamanho da janela, número de estados (`TOTAL`), número de perguntas (`TOTAL_PERGUNTAS`), pontos por acerto, o tamanho da matriz do mapa (`MAPA_LINHAS`, `MAPA_COLUNAS`), o tamanho de cada quadradinho (`CELULA`) e a posição do mapa na tela (`MAPA_X`, `MAPA_Y`). Se quiser mudar um valor, muda só aqui. |
 | Mapa (`mapa` e `LETRAS`) | O mapa do Brasil escrito como uma matriz de letras. Cada letra é um estado e o `.` é o mar. `LETRAS` diz qual letra é de qual estado. |
 | Funções `estado_da_letra` e `estado_na_tela` | A primeira transforma uma letra do mapa na posição do estado (0 a 26). A segunda recebe um ponto da tela (por exemplo, onde o mouse está) e diz qual estado está ali. |
+| Funções `mouse_dentro` e `desenhar_botao` | `mouse_dentro` devolve 1 se o mouse está dentro de um retângulo (um botão). `desenhar_botao` desenha um botão, verde quando o mouse está em cima. |
 | Função `escrever_grande` | Desenha um texto maior que o normal. A fonte do Allegro é pequena (8 pixels), então a função "estica" o desenho (escala 2, 3 ou 4) e depois volta ao tamanho normal. É usada no título, no nome do monumento e na tela final. |
 | Início do `main` | Liga o Allegro (`al_init`), o teclado, o mouse e os addons. Cria a janela, a fila de eventos e a fonte. |
 | Vetores dos estados | `siglas` e `nomes` guardam a sigla e o nome dos 27 estados. `rotulo_linha` e `rotulo_coluna` dizem onde escrever a sigla de cada estado no mapa. |
 | `PERGUNTAS` | Vetores com os dados de cada pergunta: nome do monumento, arquivo da foto, resposta certa, dica e curiosidade. |
 | Carregar fotos | Um laço `for` carrega a foto de cada monumento. Se a foto não existir, o jogo avisa no console e continua. |
+| `TEXTOS DAS TELAS DE ENTRADA` | Vetores com os textos dos botões, do tutorial e dos nomes dos desenvolvedores. |
 | `VARIAVEIS DO JOGO` | Guardam o estado do jogo: pergunta atual, pontos, acertos, estado escolhido, dica, tela final e posição do mouse. |
 | `while (rodando)` | O laço principal. Cada volta desenha a tela e espera uma ação do jogador. |
 | `CORES USADAS NO JOGO` | Cria as cores (branco, amarelo, verde, vermelho etc.) com `al_map_rgb(vermelho, verde, azul)`. |
-| `TELA FINAL` | Desenhada quando `fim_de_jogo` vale 1: pontuação, acertos, resumo de cada pergunta e mensagem final. |
+| Telas de entrada | `TELA_MENU` desenha o título e os 3 botões com um `for`; `TELA_TUTORIAL` mostra como jogar; `TELA_CREDITOS` mostra os créditos. As duas últimas têm o botão Voltar. |
+| `TELA FINAL` | Desenhada quando `tela` vale `TELA_FIM`: pontuação, acertos, resumo de cada pergunta e mensagem final. |
 | `TELA DA PERGUNTA` | Barra de cima com placar, foto do monumento, mapa e painel de mensagens embaixo. O mapa é desenhado com dois `for`, um dentro do outro, que passam por todas as posições da matriz. |
-| Tratamento de eventos | Depois de desenhar, `al_wait_for_event` espera o jogador. Um `if / else if` decide o que fazer: fechar, tecla apertada, mouse mexeu ou mouse clicou. |
+| Tratamento de eventos | Depois de desenhar, `al_wait_for_event` espera o jogador. Um `if / else if` decide o que fazer: fechar, tecla apertada, mouse mexeu ou mouse clicou (no menu, no botão Voltar ou no mapa). |
 | Final do `main` | Libera da memória as fotos, a fonte, a fila e a janela (`al_destroy_...`). |
 
 ---
@@ -46,16 +50,16 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 
 | Conceito | Onde aparece no jogo |
 |---|---|
-| **Variáveis `int`** | `pontos`, `acertos`, `pergunta`, `escolhido`, `dica`, `fim_de_jogo`, `mouse_x`, `mouse_y`. |
-| **Constantes (`#define`)** | `TOTAL`, `TOTAL_PERGUNTAS`, `PONTOS_POR_ACERTO`, `LARGURA`, `ALTURA`. |
-| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[3]`, `respostas[3]`, `dicas[3]`, `acertou[3]`, `fotos[3]`. |
+| **Variáveis `int`** | `pontos`, `acertos`, `pergunta`, `escolhido`, `dica`, `tela`, `novo_jogo`, `mouse_x`, `mouse_y`. |
+| **Constantes (`#define`)** | `TOTAL`, `TOTAL_PERGUNTAS`, `PONTOS_POR_ACERTO`, `LARGURA`, `ALTURA` e as telas (`TELA_MENU`, `TELA_JOGO`...). |
+| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[3]`, `respostas[3]`, `dicas[3]`, `acertou[3]`, `fotos[3]`, `botoes[3]`, `tutorial[6]`. |
 | **Matriz** | O `mapa`: cada linha é um texto e cada letra é uma coluna. `mapa[linha][coluna]` pega uma letra. |
 | **Vetores de texto (`char *`)** | Cada posição guarda um texto, por exemplo `nomes[24]` é `"Rio de Janeiro"`. |
 | **Condicionais (`if / else if / else`)** | Verificar acerto/erro, escolher a cor de cada estado, desenhar as fronteiras, escolher a mensagem final, descobrir qual tecla foi apertada. |
 | **Laço `while`** | O laço principal do jogo (`while (rodando)`), que só para quando `rodando` vira 0. |
 | **Laço `for`** | Dois `for` aninhados percorrem a matriz para desenhar o mapa; outro `for` procura a letra no vetor `LETRAS`; carregar as 3 fotos; zerar o vetor `acertou` ao reiniciar. |
 | **Operadores de comparação e lógicos** | `>=`, `<=`, `==`, `!=`, `&&` (e), `\|\|` (ou), `!` (não). |
-| **Funções** | `estado_da_letra`, `estado_na_tela` e `escrever_grande`: recebem parâmetros e algumas devolvem um valor com `return`. |
+| **Funções** | `estado_da_letra`, `estado_na_tela`, `mouse_dentro`, `desenhar_botao` e `escrever_grande`: recebem parâmetros e algumas devolvem um valor com `return`. |
 | **Divisão inteira** | `(x - MAPA_X) / CELULA` descobre a coluna da matriz: em C, dividir `int` por `int` descarta a parte decimal. |
 | **`continue`** | Ao desenhar o mapa, pula as posições que são mar. |
 | **`printf` / `snprintf`** | `printf` escreve aviso no console; `snprintf` monta um texto com números (ex.: `"20 de 30 pontos"`). |
@@ -108,11 +112,13 @@ if (pergunta < TOTAL_PERGUNTAS - 1) {
     dica = 0;        // esconde a dica
 }
 else {
-    fim_de_jogo = 1; // era a última: mostra a tela final
+    tela = TELA_FIM; // era a última: mostra a tela final
 }
 ```
 
-Para **reiniciar**, o jogo volta todas as variáveis ao valor inicial: `pergunta = 0`, `pontos = 0`, `acertos = 0`, `escolhido = -1`, `dica = 0`, `fim_de_jogo = 0`, e um `for` zera o vetor `acertou`.
+Na última pergunta, o `Enter` muda `tela` para `TELA_FIM`.
+
+Para **começar um jogo novo** (botão Jogar, tecla `R` ou `Enter` na tela final), o jogo coloca `novo_jogo = 1`. No fim da volta do laço, um `if (novo_jogo)` volta tudo ao valor inicial: `pergunta = 0`, `pontos = 0`, `acertos = 0`, `escolhido = -1`, `dica = 0`, um `for` zera o vetor `acertou` e `tela` vira `TELA_JOGO`. Assim o código que zera tudo fica escrito uma vez só.
 
 **Para adicionar uma 4ª pergunta:** mudar `TOTAL_PERGUNTAS` para 4 e acrescentar um item em cada vetor de perguntas (monumento, arquivo, resposta, dica, curiosidade).
 
@@ -149,3 +155,30 @@ Antes da conta, a função confere se o clique está dentro do mapa. Se o clique
 O **destaque verde-claro** usa a mesma função: quando o mouse se mexe (evento `ALLEGRO_EVENT_MOUSE_AXES`), o jogo guarda a posição em `mouse_x` e `mouse_y`, descobre o estado embaixo dele e pinta todos os quadradinhos daquele estado.
 
 As **fronteiras** são linhas pretas desenhadas onde a letra do vizinho (em cima, embaixo, à esquerda ou à direita) é diferente.
+
+---
+
+## 7. Como funcionam as telas e os botões
+
+A variável `tela` guarda em qual tela o jogo está. Cada tela tem um número com nome (`#define`):
+
+| Valor | Tela |
+|---|---|
+| `TELA_MENU` (0) | Entrada, com os botões |
+| `TELA_TUTORIAL` (1) | Como jogar |
+| `TELA_CREDITOS` (2) | Créditos |
+| `TELA_JOGO` (3) | Perguntas |
+| `TELA_FIM` (4) | Resultado |
+
+A cada volta do laço, um `if / else if` olha o valor de `tela` e desenha só aquela tela. Para trocar de tela, basta mudar o valor da variável, por exemplo `tela = TELA_CREDITOS;`.
+
+Os botões são retângulos. A posição do botão número `b` é calculada assim:
+
+```c
+int y = BOTAO_Y + b * BOTAO_ESPACO;
+```
+
+Quando o jogador clica, um `for` passa pelos 3 botões e usa `mouse_dentro` para ver se o clique foi dentro de algum. O botão 0 começa o jogo, o 1 abre o tutorial e o 2 abre os créditos. A mesma função deixa o botão verde quando o mouse está em cima.
+
+A tecla `Esc` fecha o jogo quando está no menu. Nas outras telas, ela volta para o menu.
+
