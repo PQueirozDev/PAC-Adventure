@@ -1,0 +1,15 @@
+# Pastas geradas pelo Visual Studio na compilacao
+.vs/
+Debug/
+Release/
+x64/
+JogoAllegro/
+
+# Pacotes NuGet (o Visual Studio baixa de novo ao compilar)
+packages/
+tools/
+
+# Arquivos temporarios
+*.log
+*.user
+*.bak
