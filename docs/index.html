@@ -127,6 +127,16 @@
   .passos li { margin-bottom: .7em; }
   .passos li::marker { color: var(--amarelo); font-weight: 700; }
 
+  .instalar { background: var(--painel); border: 2px solid var(--linha); border-radius: 12px; padding: 22px 24px; margin-bottom: 40px; max-width: 1000px; }
+  .instalar h3 { color: var(--amarelo); margin-bottom: 10px; }
+  .comando { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; margin: 14px 0 12px; }
+  .comando code {
+    flex: 1 1 420px; min-width: 0; display: block; padding: 12px 14px; background: #0d1328;
+    border: 2px solid var(--linha); border-radius: 8px; font-size: .9rem; overflow-x: auto; white-space: nowrap; color: var(--verde-claro);
+  }
+  .comando .botao { padding: 10px 18px; }
+  .instalar .nota { color: var(--suave); font-size: .95rem; margin: 0; }
+
   .rodape { padding: 40px 0 56px; border-top: 2px solid var(--linha); background: var(--painel); color: var(--suave); font-size: .95rem; }
   .rodape .equipe { font-size: 1.1rem; color: var(--texto); }
 
@@ -311,6 +321,18 @@ return estado_da_letra(mapa[linha][coluna]);</pre>
     <div class="wrap">
       <h2>Como rodar</h2>
       <p class="sub">Precisa do Visual Studio 2022 com a carga de trabalho Desenvolvimento para desktop com C++.</p>
+
+      <div class="instalar">
+        <h3>Baixar com um comando</h3>
+        <p>Abra o PowerShell (tecla Windows, digite <b>PowerShell</b> e aperte Enter), cole o comando abaixo e aperte Enter. Ele baixa o projeto para a pasta <code>Onde-Fica</code> na área de trabalho e abre a pasta no final.</p>
+        <div class="comando">
+          <code id="comando-instalar">irm https://raw.githubusercontent.com/PQueirozDev/PAC-PI/main/docs/instalar.ps1 | iex</code>
+          <button class="botao principal" id="copiar" type="button">Copiar</button>
+        </div>
+        <p class="nota">Se o Git estiver instalado, o projeto é clonado e, nas próximas vezes, o mesmo comando atualiza a pasta. Sem o Git, ele baixa o .zip do GitHub. <a href="https://github.com/PQueirozDev/PAC-PI/blob/main/docs/instalar.ps1">Ver o que o script faz</a>.</p>
+      </div>
+
+      <p>Ou faça na mão:</p>
       <ol class="passos">
         <li>Baixe ou clone o <a href="https://github.com/PQueirozDev/PAC-Adventure">repositório no GitHub</a>.</li>
         <li>Abra o arquivo <code>JogoAllegro.sln</code>.</li>
@@ -329,6 +351,16 @@ return estado_da_letra(mapa[linha][coluna]);</pre>
 </footer>
 
 <script>
+  // botao "Copiar" do comando de instalacao
+  document.getElementById("copiar").addEventListener("click", function () {
+    var botao = this;
+    var texto = document.getElementById("comando-instalar").textContent;
+    navigator.clipboard.writeText(texto).then(function () {
+      botao.textContent = "Copiado!";
+      setTimeout(function () { botao.textContent = "Copiar"; }, 2000);
+    });
+  });
+
   // Mesmos dados do main.c
   var MAPA = [ "................A..............................", "..............AAA..............................", "............AAAAA.........BB...................", "............AAAAA.....D..BBB...................", ".....CCC....CCAAAA.DDDDDBBBBB..................", ".....CCCCCCCCCAAAADDDDDDDBBBB..................", ".....CCCCCCCCCAAACDDDDDDDBBDDD.................", ".....CCCCCCCCCACCCCDDDDDDDBDDDDDD..............", ".....CCCCCCCCCCCCCCCDDDDDDDDDDDDDEE............", ".....CCCCCCCCCCCCCCCCDDDDDDDDDDDDEEEEE.........", ".....CCCCCCCCCCCCCCCCDDDDDDDDDDDEEEEEELFFF.....", "...CCCCCCCCCCCCCCCCCDDDDDDDDDDDDEEEEELLFFFF....", ".CCCCCCCCCCCCCCCCCCCDDDDDDDDDDDEEEEEELLFFFFGGG.", ".CCCCCCCCCCCCCCCCCCDDDDDDDDDDDDKEEEEELLLFFFGGGG", "CCCCCCCCCCCCCCCCCCCDDDDDDDDDDDKKEEEELLLLFFNNNNN", "HHCCCCCCCCCCCCCCCCCDDDDDDDDDDDKKEELLLLLLMMMNNNN", ".HHHHCCCCCCCIICCCCCJDDDDDDDDDKKKKELLLLLMMMMMMMM", ".HHHHHHCCCCIIIIJJJJJJDDDDDDDDKKKKELLLLRRRRTTTT.", "....HHHHH.IIIIIJJJJJJJJJJJJJKKKKKELLRRRRRRSST..", "....HHH...IIIIIIJJJJJJJJJJJJKKKKKRRRRRRRRRSS...", "...........IIIIIIJJJJJJJJJJJKKKKKRRRRRRRRRRR...", ".............IIIIJJJJJJJJJJJKKKKKRRRRRRRRRR....", "...............IJJJJJJJJJJJJPPPPPRRRRRRRRR.....", "................JJJJJJJJJJJJPPPPPRRVRRRRRR.....", "................JJJJJJJJJJJPPPPPPVVVVVRRRR.....", ".................JJJJJJJJJPPPPPQQVVVVVVVVR.....", "...................JJJJJJPPPPPPQQVVVVVVVRR.....", "...................JOOOOJPPPPPPPVVVVVVVVRR.....", "...................OOOOOOPPPPVVVVVVVVVVWW......", "...................OOOOOOOOPVVVVVVVVVVVWW......", "...................OOOOOOOOUUUUUVVVVVVVWW......", "...................OOOOOOOOUUUUUVVVVVVYW.......", "...................OOOOOOOUUUUUUUVVVVYYY.......", "......................OOOXXUUUUUUVUYYY.........", "......................OOXXXXXUUUUUU............", ".......................XXXXXXXUU...............", ".......................XXXXXXXX................", "........................XXXXZXZ................", "........................ZZZZZZZ................", ".......................####ZZZZ................", ".....................########Z.................", "....................#########..................", "....................#########..................", "......................#####....................", "........................##.....................", ".........................#....................." ];
   var LETRAS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#";
