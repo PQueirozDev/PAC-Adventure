@@ -52,7 +52,7 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 |---|---|
 | **Variáveis `int`** | `pontos`, `acertos`, `pergunta`, `escolhido`, `dica`, `tela`, `novo_jogo`, `mouse_x`, `mouse_y`. |
 | **Constantes (`#define`)** | `TOTAL`, `TOTAL_PERGUNTAS`, `PONTOS_POR_ACERTO`, `LARGURA`, `ALTURA` e as telas (`TELA_MENU`, `TELA_JOGO`...). |
-| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[3]`, `respostas[3]`, `dicas[3]`, `acertou[3]`, `fotos[3]`, `botoes[3]`, `tutorial[6]`. |
+| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[15]`, `respostas[15]`, `dicas[15]`, `acertou[15]`, `fotos[15]`, `creditos_fotos[15]`, `botoes[3]`, `tutorial[7]`. |
 | **Matriz** | O `mapa`: cada linha é um texto e cada letra é uma coluna. `mapa[linha][coluna]` pega uma letra. |
 | **Vetores de texto (`char *`)** | Cada posição guarda um texto, por exemplo `nomes[24]` é `"Rio de Janeiro"`. |
 | **Condicionais (`if / else if / else`)** | Verificar acerto/erro, escolher a cor de cada estado, desenhar as fronteiras, escolher a mensagem final, descobrir qual tecla foi apertada. |
@@ -62,7 +62,7 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 | **Funções** | `estado_da_letra`, `estado_na_tela`, `mouse_dentro`, `desenhar_botao` e `escrever_grande`: recebem parâmetros e algumas devolvem um valor com `return`. |
 | **Divisão inteira** | `(x - MAPA_X) / CELULA` descobre a coluna da matriz: em C, dividir `int` por `int` descarta a parte decimal. |
 | **`continue`** | Ao desenhar o mapa, pula as posições que são mar. |
-| **`printf` / `snprintf`** | `printf` escreve aviso no console; `snprintf` monta um texto com números (ex.: `"20 de 30 pontos"`). |
+| **`printf` / `snprintf`** | `printf` escreve aviso no console; `snprintf` monta um texto com números (ex.: `"170 de 190 pontos"`). |
 | **Ponteiros (uso simples)** | Os tipos do Allegro (`ALLEGRO_DISPLAY *`, `ALLEGRO_BITMAP *` etc.). Comparamos com `NULL` para saber se a foto carregou. |
 
 ---
@@ -88,20 +88,23 @@ if (escolhido != -1 && escolhido == respostas[pergunta]) {
 
 - `escolhido != -1` garante que o clique foi em cima de um estado (e não no fundo da tela).
 - Cada pergunta só pode ser respondida **uma vez**, porque o clique só é aceito quando `escolhido == -1`. Assim não dá para ganhar pontos clicando várias vezes.
-- A pontuação máxima é `TOTAL_PERGUNTAS * PONTOS_POR_ACERTO` = 3 × 10 = **30**.
-- O vetor `acertou` serve para a tela final mostrar `[OK]` ou `[X]` em cada monumento.
+- As perguntas normais valem `PONTOS_POR_ACERTO` (10). Os chefes finais valem `PONTOS_CHEFE` (30). A função `pontos_da_pergunta` devolve o valor certo para cada pergunta, e é ela que o clique usa para somar.
+- A pontuação máxima é `PONTUACAO_MAXIMA` = 13 × 10 + 2 × 30 = **190**.
+- O vetor `acertou` serve para a tela final mostrar `OK` ou `X` em cada monumento, em duas colunas.
 
 ---
 
 ## 5. Como funciona a troca de perguntas
 
-A variável `pergunta` guarda a **posição** da pergunta atual nos vetores (0, 1 ou 2). Como todos os vetores usam a mesma posição, basta mudar `pergunta` para trocar tudo de uma vez:
+A variável `pergunta` guarda a **posição** da pergunta atual nos vetores (de 0 a 14). Como todos os vetores usam a mesma posição, basta mudar `pergunta` para trocar tudo de uma vez:
 
 | `pergunta` | `monumentos[...]` | `arquivos[...]` | `respostas[...]` |
 |---|---|---|---|
 | 0 | Cristo Redentor | cristo.png | 24 (RJ) |
 | 1 | Teatro Amazonas | teatro.png | 2 (AM) |
 | 2 | Congresso Nacional | congresso.png | 16 (DF) |
+| ... | ... | ... | ... |
+| 14 | Real Forte Principe da Beira | principe_beira.png | 8 (RO) |
 
 Quando o jogador aperta `Enter` **depois de responder**:
 
@@ -120,7 +123,18 @@ Na última pergunta, o `Enter` muda `tela` para `TELA_FIM`.
 
 Para **começar um jogo novo** (botão Jogar, tecla `R` ou `Enter` na tela final), o jogo coloca `novo_jogo = 1`. No fim da volta do laço, um `if (novo_jogo)` volta tudo ao valor inicial: `pergunta = 0`, `pontos = 0`, `acertos = 0`, `escolhido = -1`, `dica = 0`, um `for` zera o vetor `acertou` e `tela` vira `TELA_JOGO`. Assim o código que zera tudo fica escrito uma vez só.
 
-**Para adicionar uma 4ª pergunta:** mudar `TOTAL_PERGUNTAS` para 4 e acrescentar um item em cada vetor de perguntas (monumento, arquivo, resposta, dica, curiosidade).
+**Para adicionar uma pergunta nova:** aumentar `TOTAL_PERGUNTAS` e acrescentar um item em cada vetor de perguntas (monumento, arquivo, resposta, dica, curiosidade e crédito da foto). Os chefes precisam continuar no final, então a pergunta nova entra antes deles e `PRIMEIRO_CHEFE` também aumenta 1.
+
+### Chefes finais
+
+As perguntas a partir de `PRIMEIRO_CHEFE` (posições 13 e 14) são os chefes. A função `eh_chefe(p)` devolve 1 para elas, e o jogo usa essa função em quatro lugares:
+
+- a tecla `D` não mostra dica;
+- o estado embaixo do mouse não fica verde-claro;
+- a foto ganha moldura vermelha, e a barra de cima mostra "CHEFE FINAL 1 de 2";
+- o acerto vale `PONTOS_CHEFE` (30) em vez de 10.
+
+Na tela final, um `for` conta quantos chefes o jogador acertou. Se acertou os dois, mas não acertou tudo, aparece "Chefes derrotados!".
 
 ---
 

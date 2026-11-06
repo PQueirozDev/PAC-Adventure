@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
@@ -7,8 +8,14 @@
 #define LARGURA 880
 #define ALTURA 600
 #define TOTAL 27            // quantidade de estados (26 estados + DF)
-#define TOTAL_PERGUNTAS 3   // quantidade de monumentos (perguntas) do jogo
+#define TOTAL_PERGUNTAS 15  // quantidade de monumentos (perguntas) do jogo
 #define PONTOS_POR_ACERTO 10
+
+// As 2 ultimas perguntas sao os CHEFES FINAIS: valem mais pontos,
+// nao tem dica e o mapa nao acende quando o mouse passa por cima.
+#define PRIMEIRO_CHEFE 13   // posicao da primeira pergunta-chefe
+#define PONTOS_CHEFE 30
+#define PONTUACAO_MAXIMA ((PRIMEIRO_CHEFE * PONTOS_POR_ACERTO) + (TOTAL_PERGUNTAS - PRIMEIRO_CHEFE) * PONTOS_CHEFE)
 
 // Telas do jogo: a variavel "tela" guarda um destes numeros
 #define TELA_MENU 0      // tela de entrada
@@ -138,6 +145,21 @@ void escrever_grande(ALLEGRO_FONT *fonte, ALLEGRO_COLOR cor, float x, float y, i
     al_use_transform(&t);
 }
 
+// Devolve 1 se a pergunta p e um chefe final, ou 0 se e uma pergunta normal.
+int eh_chefe(int p)
+{
+    return p >= PRIMEIRO_CHEFE;
+}
+
+// Quantos pontos vale acertar a pergunta p.
+int pontos_da_pergunta(int p)
+{
+    if (eh_chefe(p)) {
+        return PONTOS_CHEFE;
+    }
+    return PONTOS_POR_ACERTO;
+}
+
 // Devolve 1 se o mouse (mx, my) esta dentro do retangulo, ou 0 se esta fora.
 int mouse_dentro(int mx, int my, int x, int y, int largura, int altura)
 {
@@ -213,31 +235,93 @@ int main()
     // ===== PERGUNTAS =====
     // Cada pergunta usa a MESMA posicao em todos os vetores abaixo.
     // Exemplo: posicao 0 = Cristo Redentor, foto cristo.png, resposta 24 (RJ).
+    // As posicoes 13 e 14 (a partir de PRIMEIRO_CHEFE) sao os chefes finais.
     char *monumentos[TOTAL_PERGUNTAS] = {
         "Cristo Redentor",
         "Teatro Amazonas",
-        "Congresso Nacional"
+        "Congresso Nacional",
+        "Elevador Lacerda",
+        "Arcos da Lapa",
+        "Monumento as Bandeiras",
+        "Praca da Se",
+        "Lencois Maranhenses",
+        "Opera de Arame",
+        "Monumento aos Formadores de Nacionalidade",
+        "Estatua do Padre Cicero",
+        "Relogio Municipal",
+        "Ponte dos Ingleses",
+        "Forte dos Reis Magos",        // chefe final 1
+        "Real Forte Principe da Beira" // chefe final 2
     };
     char *arquivos[TOTAL_PERGUNTAS] = {
         "cristo.png",
         "teatro.png",
-        "congresso.png"
+        "congresso.png",
+        "elevador.png",
+        "arcos.png",
+        "bandeiras.png",
+        "se.png",
+        "lencois.png",
+        "opera.png",
+        "formadores.png",
+        "padre_cicero.png",
+        "relogio.png",
+        "ponte_ingleses.png",
+        "reis_magos.png",
+        "principe_beira.png"
     };
     // posicao do estado certo nos vetores siglas/nomes
     int respostas[TOTAL_PERGUNTAS] = {
         24, // RJ
         2,  // AM
-        16  // DF
+        16, // DF
+        17, // BA
+        24, // RJ
+        20, // SP
+        20, // SP
+        4,  // MA
+        23, // PR
+        18, // SE
+        5,  // CE
+        2,  // AM
+        5,  // CE
+        6,  // RN
+        8   // RO
     };
+    // os chefes nao tem dica (a tecla D nao funciona neles)
     char *dicas[TOTAL_PERGUNTAS] = {
         "DICA: fica na regiao Sudeste e tem litoral.",
         "DICA: fica na regiao Norte e e o maior estado do Brasil.",
-        "DICA: fica no Centro-Oeste e e onde esta a capital do pais."
+        "DICA: fica no Centro-Oeste e e onde esta a capital do pais.",
+        "DICA: fica no Nordeste, no estado com o maior litoral do Brasil.",
+        "DICA: fica no Sudeste, no estado que ja foi sede da capital do Brasil.",
+        "DICA: fica no Sudeste, no estado mais populoso do Brasil.",
+        "DICA: fica na maior cidade do Brasil.",
+        "DICA: fica no Nordeste, na divisa com o Piaui.",
+        "DICA: fica no Sul, no estado das Cataratas do Iguacu.",
+        "DICA: fica no Nordeste, no menor estado do Brasil.",
+        "DICA: fica no Nordeste, no estado cuja capital e Fortaleza.",
+        "DICA: fica no Norte, na mesma cidade do Teatro Amazonas.",
+        "DICA: fica no Nordeste, no mesmo estado da estatua do Padre Cicero.",
+        "",
+        ""
     };
     char *curiosidades[TOTAL_PERGUNTAS] = {
         "Inaugurado em 1931, fica no alto do morro do Corcovado.",
         "Inaugurado em 1896 em Manaus, na epoca do ciclo da borracha.",
-        "Projetado por Oscar Niemeyer e inaugurado em 1960 em Brasilia."
+        "Projetado por Oscar Niemeyer e inaugurado em 1960 em Brasilia.",
+        "Inaugurado em 1873 em Salvador, liga a Cidade Baixa a Cidade Alta.",
+        "Era um aqueduto que levava agua ao centro do Rio. Hoje o bondinho passa por cima.",
+        "Esculpido por Victor Brecheret e inaugurado em 1953, perto do Parque Ibirapuera.",
+        "E o marco zero da cidade de Sao Paulo. A catedral foi inaugurada em 1954.",
+        "Dunas de areia branca com lagoas de agua da chuva. Virou parque nacional em 1981.",
+        "Teatro de Curitiba feito de tubos de aco e teto transparente, cercado por um lago.",
+        "Fica na orla de Atalaia, em Aracaju, com estatuas de Zumbi, Tiradentes e Dom Pedro II.",
+        "Fica na Colina do Horto, em Juazeiro do Norte, e foi inaugurada em 1969.",
+        "Fica no Centro Historico de Manaus. A engrenagem do relogio veio da Suica.",
+        "Tambem chamada de Ponte Metalica, fica na Praia de Iracema, em Fortaleza.",
+        "Comecou a ser construido em 1598 em Natal, na foz do rio Potengi.",
+        "Construido entre 1776 e 1783 no rio Guapore, na fronteira com a Bolivia."
     };
 
     // carrega a foto de cada monumento
@@ -253,16 +337,36 @@ int main()
     // ===== TEXTOS DAS TELAS DE ENTRADA =====
     char *botoes[TOTAL_BOTOES] = { "JOGAR", "COMO JOGAR", "CREDITOS" };
 
-    char *tutorial[6] = {
+    char *tutorial[7] = {
         "1. Olhe a foto e o nome do monumento.",
         "2. Clique no estado do mapa onde voce acha que ele fica.",
         "3. Acertou? Voce ganha 10 pontos.",
         "4. Errou? O estado certo aparece em amarelo no mapa.",
         "5. Aperte ENTER para ir para a proxima pergunta.",
-        "6. Sao 3 perguntas. No final aparece a sua pontuacao."
+        "6. Sao 15 perguntas. No final aparece a sua pontuacao.",
+        "7. As 2 ultimas sao CHEFES FINAIS: valem 30 pontos e nao tem dica!"
     };
 
     char *desenvolvedores[3] = { "Arthur Pimentel", "Christopher Nithigale", "Pedro Queiroz" };
+
+    // autor e licenca de cada foto (todas do Wikimedia Commons)
+    char *creditos_fotos[TOTAL_PERGUNTAS] = {
+        "Cristo Redentor: Artyominc (CC BY-SA 3.0)",
+        "Teatro Amazonas: Susan Valentim (CC BY-SA 4.0)",
+        "Congresso Nacional: Mariordo (CC BY-SA 4.0)",
+        "Elevador Lacerda: JLPizzol (CC BY-SA 4.0)",
+        "Arcos da Lapa: Mike Peel (CC BY-SA 4.0)",
+        "Monumento as Bandeiras: Dornicke (dominio publico)",
+        "Praca da Se: Wilfredor (CC0)",
+        "Lencois Maranhenses: Julius Dadalti (CC BY-SA 4.0)",
+        "Opera de Arame: Domingos Bongestabs (CC BY-SA 4.0)",
+        "Formadores de Nacionalidade: Paul R. Burley (CC BY-SA 4.0)",
+        "Padre Cicero: Allan Patrick (CC BY-SA 2.0)",
+        "Relogio Municipal: JLPizzol (CC BY-SA 4.0)",
+        "Ponte dos Ingleses: Claudney Neves (CC BY-SA 4.0)",
+        "Forte dos Reis Magos: DlauriniJr (CC BY-SA 4.0)",
+        "Forte Principe da Beira: Israelvalejr (CC BY-SA 4.0)"
+    };
 
     // ===== VARIAVEIS DO JOGO =====
     int pergunta = 0;   // qual pergunta esta na tela (0, 1 ou 2)
@@ -315,8 +419,8 @@ int main()
             escrever_grande(fonte, amarelo, LARGURA / 2, 55, 4, "COMO JOGAR");
 
             // escreve cada linha do vetor tutorial
-            for (int i = 0; i < 6; i++) {
-                al_draw_text(fonte, branco, 130, 120 + i * 28, 0, tutorial[i]);
+            for (int i = 0; i < 7; i++) {
+                al_draw_text(fonte, branco, 130, 115 + i * 26, 0, tutorial[i]);
             }
 
             // legenda das cores do mapa
@@ -343,8 +447,8 @@ int main()
         }
         else if (tela == TELA_CREDITOS) {
             // ===== TELA DE CREDITOS =====
-            al_draw_filled_rounded_rectangle(160, 30, LARGURA - 160, 500, 12, 12, painel);
-            al_draw_rounded_rectangle(160, 30, LARGURA - 160, 500, 12, 12, borda, 3);
+            al_draw_filled_rounded_rectangle(100, 30, LARGURA - 100, 505, 12, 12, painel);
+            al_draw_rounded_rectangle(100, 30, LARGURA - 100, 505, 12, 12, borda, 3);
             escrever_grande(fonte, amarelo, LARGURA / 2, 55, 4, "CREDITOS");
 
             al_draw_text(fonte, amarelo, LARGURA / 2, 125, ALLEGRO_ALIGN_CENTRE, "DESENVOLVIDO POR");
@@ -352,13 +456,13 @@ int main()
                 escrever_grande(fonte, branco, LARGURA / 2, 145 + i * 28, 2, desenvolvedores[i]);
             }
 
-            al_draw_text(fonte, amarelo, LARGURA / 2, 280, ALLEGRO_ALIGN_CENTRE, "FOTO DO CRISTO REDENTOR");
-            al_draw_text(fonte, branco, LARGURA / 2, 300, ALLEGRO_ALIGN_CENTRE,
-                "Artyominc - Wikimedia Commons (CC BY-SA 3.0)");
+            al_draw_text(fonte, amarelo, LARGURA / 2, 245, ALLEGRO_ALIGN_CENTRE, "FOTOS (WIKIMEDIA COMMONS)");
+            for (int i = 0; i < TOTAL_PERGUNTAS; i++) {
+                al_draw_text(fonte, branco, LARGURA / 2, 262 + i * 13, ALLEGRO_ALIGN_CENTRE, creditos_fotos[i]);
+            }
 
-            al_draw_line(LARGURA / 2 - 150, 400, LARGURA / 2 + 150, 400, borda, 2);
-            al_draw_text(fonte, cinza, LARGURA / 2, 420, ALLEGRO_ALIGN_CENTRE, "Projeto Integrador");
-            al_draw_text(fonte, cinza, LARGURA / 2, 440, ALLEGRO_ALIGN_CENTRE, "Feito em C com Allegro 5");
+            al_draw_text(fonte, cinza, LARGURA / 2, 480, ALLEGRO_ALIGN_CENTRE,
+                "Projeto Integrador - Feito em C com Allegro 5");
 
             desenhar_botao(fonte, "VOLTAR", VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A,
                 mouse_dentro(mouse_x, mouse_y, VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A));
@@ -367,49 +471,66 @@ int main()
             // ===== TELA FINAL =====
             char texto[60]; // guarda um texto montado com numeros
 
-            al_draw_filled_rounded_rectangle(140, 60, 740, 540, 12, 12, painel);
-            al_draw_rounded_rectangle(140, 60, 740, 540, 12, 12, borda, 3);
+            al_draw_filled_rounded_rectangle(30, 60, LARGURA - 30, 540, 12, 12, painel);
+            al_draw_rounded_rectangle(30, 60, LARGURA - 30, 540, 12, 12, borda, 3);
 
             escrever_grande(fonte, amarelo, LARGURA / 2, 95, 4, "FIM DE JOGO!");
 
-            snprintf(texto, sizeof(texto), "%d de %d pontos", pontos, TOTAL_PERGUNTAS * PONTOS_POR_ACERTO);
-            escrever_grande(fonte, branco, LARGURA / 2, 160, 3, texto);
+            snprintf(texto, sizeof(texto), "%d de %d pontos", pontos, PONTUACAO_MAXIMA);
+            escrever_grande(fonte, branco, LARGURA / 2, 150, 3, texto);
 
             snprintf(texto, sizeof(texto), "Acertos: %d de %d", acertos, TOTAL_PERGUNTAS);
-            escrever_grande(fonte, branco, LARGURA / 2, 205, 2, texto);
+            escrever_grande(fonte, branco, LARGURA / 2, 192, 2, texto);
 
             // linha separadora
-            al_draw_line(200, 245, 680, 245, borda, 2);
+            al_draw_line(200, 228, 680, 228, borda, 2);
 
-            // resumo de cada pergunta
+            // resumo de cada pergunta em duas colunas de 8 linhas.
+            // Os chefes aparecem com "CHEFE" no final.
             for (int p = 0; p < TOTAL_PERGUNTAS; p++) {
-                int y = 270 + p * 30;
+                int x = 50 + (p / 8) * 395;  // p de 0 a 7 = coluna da esquerda
+                int y = 240 + (p % 8) * 18;  // % da a linha dentro da coluna
+                char *marca = "";
+                if (eh_chefe(p)) {
+                    marca = " CHEFE";
+                }
                 if (acertou[p]) {
-                    al_draw_textf(fonte, verde_claro, LARGURA / 2, y, ALLEGRO_ALIGN_CENTRE,
-                        "[OK] %s - %s", monumentos[p], nomes[respostas[p]]);
+                    al_draw_textf(fonte, verde_claro, x, y, 0,
+                        "OK %s (%s)%s", monumentos[p], siglas[respostas[p]], marca);
                 }
                 else {
-                    al_draw_textf(fonte, vermelho_claro, LARGURA / 2, y, ALLEGRO_ALIGN_CENTRE,
-                        "[X]  %s - %s", monumentos[p], nomes[respostas[p]]);
+                    al_draw_textf(fonte, vermelho_claro, x, y, 0,
+                        "X  %s (%s)%s", monumentos[p], siglas[respostas[p]], marca);
                 }
             }
 
-            al_draw_line(200, 365, 680, 365, borda, 2);
+            al_draw_line(200, 392, 680, 392, borda, 2);
+
+            // conta quantos chefes o jogador derrotou
+            int chefes_vencidos = 0;
+            for (int p = PRIMEIRO_CHEFE; p < TOTAL_PERGUNTAS; p++) {
+                chefes_vencidos = chefes_vencidos + acertou[p];
+            }
 
             // mensagem de acordo com a quantidade de acertos
             if (acertos == TOTAL_PERGUNTAS) {
-                escrever_grande(fonte, amarelo, LARGURA / 2, 390, 2, "Excelente! Gabaritou!");
-                al_draw_text(fonte, branco, LARGURA / 2, 425, ALLEGRO_ALIGN_CENTRE,
-                    "Voce conhece muito bem o Brasil.");
+                escrever_grande(fonte, amarelo, LARGURA / 2, 410, 2, "Excelente! Gabaritou!");
+                al_draw_text(fonte, branco, LARGURA / 2, 442, ALLEGRO_ALIGN_CENTRE,
+                    "Voce conhece muito bem o Brasil e venceu os dois chefes.");
+            }
+            else if (chefes_vencidos == TOTAL_PERGUNTAS - PRIMEIRO_CHEFE) {
+                escrever_grande(fonte, amarelo, LARGURA / 2, 410, 2, "Chefes derrotados!");
+                al_draw_text(fonte, branco, LARGURA / 2, 442, ALLEGRO_ALIGN_CENTRE,
+                    "Voce venceu os dois fortes. Agora tente acertar todos.");
             }
             else if (acertos > 0) {
-                escrever_grande(fonte, amarelo, LARGURA / 2, 390, 2, "Bom trabalho!");
-                al_draw_text(fonte, branco, LARGURA / 2, 425, ALLEGRO_ALIGN_CENTRE,
+                escrever_grande(fonte, amarelo, LARGURA / 2, 410, 2, "Bom trabalho!");
+                al_draw_text(fonte, branco, LARGURA / 2, 442, ALLEGRO_ALIGN_CENTRE,
                     "Jogue de novo para tentar acertar todos.");
             }
             else {
-                escrever_grande(fonte, amarelo, LARGURA / 2, 390, 2, "Nao foi dessa vez!");
-                al_draw_text(fonte, branco, LARGURA / 2, 425, ALLEGRO_ALIGN_CENTRE,
+                escrever_grande(fonte, amarelo, LARGURA / 2, 410, 2, "Nao foi dessa vez!");
+                al_draw_text(fonte, branco, LARGURA / 2, 442, ALLEGRO_ALIGN_CENTRE,
                     "Use a dica (tecla D) e tente de novo.");
             }
 
@@ -424,13 +545,25 @@ int main()
             al_draw_line(0, 56, LARGURA, 56, borda, 2);
             escrever_grande(fonte, amarelo, 140, 16, 3, "ONDE FICA?");
             al_draw_text(fonte, cinza, 440, 24, ALLEGRO_ALIGN_CENTRE, "D = dica   R = reiniciar   ESC = menu");
-            al_draw_textf(fonte, branco, LARGURA - 20, 14, ALLEGRO_ALIGN_RIGHT,
-                "Pergunta %d de %d", pergunta + 1, TOTAL_PERGUNTAS);
+            if (eh_chefe(pergunta)) {
+                al_draw_textf(fonte, vermelho_claro, LARGURA - 20, 14, ALLEGRO_ALIGN_RIGHT,
+                    "CHEFE FINAL %d de %d", pergunta - PRIMEIRO_CHEFE + 1, TOTAL_PERGUNTAS - PRIMEIRO_CHEFE);
+            }
+            else {
+                al_draw_textf(fonte, branco, LARGURA - 20, 14, ALLEGRO_ALIGN_RIGHT,
+                    "Pergunta %d de %d", pergunta + 1, TOTAL_PERGUNTAS);
+            }
             al_draw_textf(fonte, amarelo, LARGURA - 20, 34, ALLEGRO_ALIGN_RIGHT,
                 "Pontos: %d   Acertos: %d", pontos, acertos);
 
-            // nome e foto do monumento da pergunta atual
-            escrever_grande(fonte, branco, 170, 66, 2, monumentos[pergunta]);
+            // nome e foto do monumento da pergunta atual.
+            // Nomes compridos nao cabem em cima da foto com escala 2, entao usam escala 1.
+            if (strlen(monumentos[pergunta]) <= 20) {
+                escrever_grande(fonte, branco, 170, 66, 2, monumentos[pergunta]);
+            }
+            else {
+                al_draw_text(fonte, branco, 170, 70, ALLEGRO_ALIGN_CENTRE, monumentos[pergunta]);
+            }
             if (fotos[pergunta] != NULL) {
                 al_draw_bitmap(fotos[pergunta], 20, 90, 0);
             }
@@ -441,7 +574,13 @@ int main()
                 al_draw_text(fonte, amarelo, 170, 280, ALLEGRO_ALIGN_CENTRE, arquivos[pergunta]);
                 al_draw_text(fonte, cinza, 170, 310, ALLEGRO_ALIGN_CENTRE, "(coloque a foto na pasta do projeto)");
             }
-            al_draw_rectangle(20, 90, 320, 450, branco, 3);
+            // moldura da foto: vermelha nos chefes finais
+            if (eh_chefe(pergunta)) {
+                al_draw_rectangle(20, 90, 320, 450, al_map_rgb(210, 60, 50), 5);
+            }
+            else {
+                al_draw_rectangle(20, 90, 320, 450, branco, 3);
+            }
 
             // mapa
             al_draw_text(fonte, cinza, 600, 66, ALLEGRO_ALIGN_CENTRE,
@@ -468,7 +607,7 @@ int main()
                     else if (i == escolhido) {
                         cor = al_map_rgb(210, 60, 50);           // escolha errada
                     }
-                    else if (escolhido == -1 && i == estado_mouse) {
+                    else if (escolhido == -1 && i == estado_mouse && !eh_chefe(pergunta)) {
                         cor = al_map_rgb(130, 210, 140);         // verde claro (mouse em cima)
                     }
                     al_draw_filled_rectangle(x, y, x + CELULA, y + CELULA, cor);
@@ -506,7 +645,12 @@ int main()
             al_draw_filled_rounded_rectangle(20, 465, LARGURA - 20, ALTURA - 10, 8, 8, painel);
             al_draw_rounded_rectangle(20, 465, LARGURA - 20, ALTURA - 10, 8, 8, borda, 2);
 
-            if (escolhido == -1) {
+            if (escolhido == -1 && eh_chefe(pergunta)) {
+                escrever_grande(fonte, vermelho_claro, 40 + 150, 478, 2, "CHEFE FINAL!");
+                al_draw_textf(fonte, branco, 40, 505, 0,
+                    "Vale %d pontos. Sem dica e sem o mapa acender: so voce e o que voce sabe.", PONTOS_CHEFE);
+            }
+            else if (escolhido == -1) {
                 al_draw_text(fonte, branco, 40, 480, 0, "Clique em um estado no mapa...");
                 if (dica) {
                     al_draw_text(fonte, amarelo, 40, 505, 0, dicas[pergunta]);
@@ -518,7 +662,7 @@ int main()
             else {
                 if (escolhido == respostas[pergunta]) {
                     char texto[40];
-                    snprintf(texto, sizeof(texto), "ACERTOU! +%d pontos", PONTOS_POR_ACERTO);
+                    snprintf(texto, sizeof(texto), "ACERTOU! +%d pontos", pontos_da_pergunta(pergunta));
                     escrever_grande(fonte, verde_claro, LARGURA / 2, 475, 2, texto);
                     al_draw_textf(fonte, branco, LARGURA / 2, 503, ALLEGRO_ALIGN_CENTRE,
                         "Parabens! Voce marcou %s corretamente.", nomes[respostas[pergunta]]);
@@ -564,7 +708,7 @@ int main()
                     tela = TELA_MENU; // nas outras telas, ESC volta ao menu
                 }
             }
-            else if (tecla == ALLEGRO_KEY_D && tela == TELA_JOGO) {
+            else if (tecla == ALLEGRO_KEY_D && tela == TELA_JOGO && !eh_chefe(pergunta)) {
                 dica = 1;
             }
             else if ((tecla == ALLEGRO_KEY_R && (tela == TELA_JOGO || tela == TELA_FIM)) ||
@@ -618,7 +762,7 @@ int main()
 
             // se clicou em um estado, confere a resposta e soma os pontos
             if (escolhido != -1 && escolhido == respostas[pergunta]) {
-                pontos = pontos + PONTOS_POR_ACERTO;
+                pontos = pontos + pontos_da_pergunta(pergunta);
                 acertos++;
                 acertou[pergunta] = 1;
             }
