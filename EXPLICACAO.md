@@ -52,7 +52,7 @@ O `main.c` está dividido em blocos, na ordem em que aparecem:
 |---|---|
 | **Variáveis `int`** | `pontos`, `acertos`, `pergunta`, `escolhido`, `dica`, `tela`, `novo_jogo`, `mouse_x`, `mouse_y`. |
 | **Constantes (`#define`)** | `TOTAL`, `TOTAL_PERGUNTAS`, `PONTOS_POR_ACERTO`, `LARGURA`, `ALTURA` e as telas (`TELA_MENU`, `TELA_JOGO`...). |
-| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[15]`, `respostas[15]`, `dicas[15]`, `acertou[15]`, `fotos[15]`, `creditos_fotos[15]`, `botoes[3]`, `tutorial[7]`. |
+| **Vetores** | `siglas[27]`, `nomes[27]`, `rotulo_linha[27]`, `rotulo_coluna[27]`, `monumentos[15]`, `respostas[15]`, `dicas[15]`, `acertou[15]`, `fotos[15]`, `botoes[3]`, `tutorial[7]`. |
 | **Matriz** | O `mapa`: cada linha é um texto e cada letra é uma coluna. `mapa[linha][coluna]` pega uma letra. |
 | **Vetores de texto (`char *`)** | Cada posição guarda um texto, por exemplo `nomes[24]` é `"Rio de Janeiro"`. |
 | **Condicionais (`if / else if / else`)** | Verificar acerto/erro, escolher a cor de cada estado, desenhar as fronteiras, escolher a mensagem final, descobrir qual tecla foi apertada. |
@@ -123,7 +123,7 @@ Na última pergunta, o `Enter` muda `tela` para `TELA_FIM`.
 
 Para **começar um jogo novo** (botão Jogar, tecla `R` ou `Enter` na tela final), o jogo coloca `novo_jogo = 1`. No fim da volta do laço, um `if (novo_jogo)` volta tudo ao valor inicial: `pergunta = 0`, `pontos = 0`, `acertos = 0`, `escolhido = -1`, `dica = 0`, um `for` zera o vetor `acertou` e `tela` vira `TELA_JOGO`. Assim o código que zera tudo fica escrito uma vez só.
 
-**Para adicionar uma pergunta nova:** aumentar `TOTAL_PERGUNTAS` e acrescentar um item em cada vetor de perguntas (monumento, arquivo, resposta, dica, curiosidade e crédito da foto). Os chefes precisam continuar no final, então a pergunta nova entra antes deles e `PRIMEIRO_CHEFE` também aumenta 1.
+**Para adicionar uma pergunta nova:** aumentar `TOTAL_PERGUNTAS` e acrescentar um item em cada vetor de perguntas (monumento, arquivo, resposta, dica e curiosidade). Os chefes precisam continuar no final, então a pergunta nova entra antes deles e `PRIMEIRO_CHEFE` também aumenta 1.
 
 ### Chefes finais
 

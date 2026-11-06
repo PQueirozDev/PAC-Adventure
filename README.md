@@ -14,7 +14,7 @@ O jogo mostra um monumento famoso do Brasil e um mapa. O jogador clica no estado
 
 ![Como jogar](imagens/0-como-jogar.png)
 
-**Créditos** — equipe e autor/licença de cada uma das 15 fotos.
+**Créditos** — nomes da equipe.
 
 ![Créditos](imagens/0-creditos.png)
 
@@ -94,7 +94,7 @@ O jogo tem **15 perguntas**, uma para cada monumento. As duas últimas são os *
 - **Pontuação:** se o estado clicado for igual à resposta da pergunta, o jogo soma os pontos da pergunta (10, ou 30 nos chefes) em `pontos` e 1 em `acertos`.
 - **Fotos:** cada monumento tem um arquivo de imagem na mesma pasta do `main.c`. Se uma foto não for encontrada, o jogo **não fecha**: ele mostra um quadro com o nome do arquivo que falta.
 
-O site do projeto fica na pasta `docs/` e pode ser publicado pelo GitHub Pages.
+O site do projeto fica na pasta `docs/` e pode ser publicado pelo GitHub Pages. A página `docs/processo.html` mostra o passo a passo da criação, com as versões antigas do jogo tiradas do histórico do Git.
 
 Todo o código está em um único arquivo, `main.c`. A explicação do código está em [`EXPLICACAO.md`](EXPLICACAO.md).
 

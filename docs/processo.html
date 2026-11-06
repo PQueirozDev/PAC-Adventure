@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passo a passo da criação — Onde Fica?</title>
+<meta name="description" content="Como o jogo Onde Fica? foi construído em C com Allegro 5, etapa por etapa, com as versões reais do histórico no GitHub.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fundo: #141e3c;
+    --painel: #202e58;
+    --escuro: #0d1328;
+    --linha: #50649f;
+    --verde: #469650;
+    --verde-claro: #82d28c;
+    --amarelo: #f0c828;
+    --vermelho: #f07064;
+    --texto: #e9edf7;
+    --suave: #aab4c8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  a { color: var(--amarelo); text-underline-offset: 3px; }
+  a:focus-visible { outline: 3px solid var(--amarelo); outline-offset: 3px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 { font-family: "Silkscreen", monospace; font-weight: 400; line-height: 1.15; margin: 0; }
+  h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); color: var(--amarelo); margin-bottom: 18px; }
+  h3 { font-size: 1.3rem; margin-bottom: 10px; }
+  p { margin: 0 0 1em; max-width: 64ch; }
+  code, pre { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  p code, li code { font-size: .92em; background: var(--escuro); padding: 1px 6px; border-radius: 4px; }
+
+  /* topo */
+  .topo { border-bottom: 2px solid var(--linha); background: var(--painel); }
+  .topo .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; flex-wrap: wrap; }
+  .marca { font-family: "Silkscreen", monospace; color: var(--amarelo); font-size: 1.3rem; text-decoration: none; }
+  .topo nav { display: flex; gap: 20px; flex-wrap: wrap; }
+  .topo nav a { color: var(--texto); text-decoration: none; font-size: .98rem; }
+  .topo nav a:hover, .topo nav a[aria-current] { color: var(--amarelo); }
+
+  /* abertura */
+  .abertura { padding: 64px 0 56px; }
+  .abertura h1 { font-size: clamp(2.2rem, 5.6vw, 4rem); color: var(--amarelo); margin-bottom: 20px; }
+  .abertura .intro { font-size: 1.2rem; }
+  .abertura .detalhe { color: var(--suave); }
+
+  .numeros { list-style: none; padding: 0; margin: 36px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .numeros li { background: var(--painel); border: 2px solid var(--linha); border-radius: 10px; padding: 16px 18px; }
+  .numeros strong { display: block; font-family: "Silkscreen", monospace; font-weight: 400; font-size: 2rem; color: var(--amarelo); line-height: 1.1; }
+  .numeros span { color: var(--suave); font-size: .95rem; }
+
+  section { padding: 72px 0; border-top: 2px solid var(--painel); }
+  .sub { color: var(--suave); max-width: 64ch; margin-bottom: 36px; }
+
+  /* linha do tempo resumida */
+  .tempo { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+  .tempo li { border-top: 4px solid var(--linha); padding-top: 12px; }
+  .tempo li.marco { border-top-color: var(--amarelo); }
+  .tempo .data { font-family: "IBM Plex Mono", monospace; font-size: .85rem; color: var(--suave); display: block; }
+  .tempo a { color: var(--texto); text-decoration: none; font-weight: 700; display: block; margin-top: 2px; line-height: 1.35; }
+  .tempo a:hover { color: var(--amarelo); }
+
+  /* etapas detalhadas */
+  .etapa { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 40px 48px; align-items: start; padding: 48px 0; border-bottom: 1px dashed var(--linha); }
+  .etapa:last-child { border-bottom: 0; padding-bottom: 0; }
+  .etapa:first-of-type { padding-top: 8px; }
+  .rotulo { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .num { font-family: "Silkscreen", monospace; font-size: 1.4rem; color: var(--fundo); background: var(--amarelo); width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; flex: none; }
+  .commit { font-family: "IBM Plex Mono", monospace; font-size: .85rem; color: var(--suave); }
+  .commit a { color: var(--suave); }
+  .commit a:hover { color: var(--amarelo); }
+  .etapa ul { margin: 0 0 1em; padding-left: 1.2em; max-width: 64ch; }
+  .etapa li { margin-bottom: .4em; }
+  .etapa li::marker { color: var(--amarelo); }
+  figure { margin: 0; }
+  figure img { width: 100%; height: auto; display: block; border: 3px solid var(--linha); border-radius: 8px; image-rendering: pixelated; }
+  figure + figure { margin-top: 20px; }
+  figcaption { margin-top: 8px; color: var(--suave); font-size: .95rem; }
+  figcaption b { color: var(--texto); }
+  pre {
+    margin: 0 0 1em; padding: 16px 18px; background: var(--escuro); border: 2px solid var(--painel); border-radius: 10px;
+    overflow-x: auto; font-size: .86rem; line-height: 1.55; color: var(--texto);
+  }
+  pre .com { color: var(--suave); }
+  pre .u { color: var(--vermelho); }
+  pre .v { color: var(--verde-claro); }
+  pre .y { color: var(--amarelo); }
+
+  /* laco principal */
+  .laco { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: passo; }
+  .laco li { counter-increment: passo; background: var(--painel); border: 2px solid var(--linha); border-radius: 10px; padding: 18px 20px; position: relative; }
+  .laco li::before { content: counter(passo); font-family: "Silkscreen", monospace; color: var(--amarelo); font-size: 1.4rem; display: block; margin-bottom: 6px; }
+  .laco h3 { font-size: 1.05rem; }
+  .laco p { margin: 0; color: var(--suave); font-size: .97rem; }
+  .volta { margin-top: 14px; color: var(--suave); font-size: .95rem; }
+
+  .ferramentas { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; list-style: none; padding: 0; margin: 0; }
+  .ferramentas li { border-left: 4px solid var(--verde); padding: 4px 0 4px 16px; }
+  .ferramentas strong { display: block; }
+  .ferramentas span { color: var(--suave); font-size: .97rem; }
+
+  .partes { width: 100%; border-collapse: collapse; font-size: .98rem; }
+  .partes th, .partes td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--painel); vertical-align: top; }
+  .partes th { color: var(--amarelo); font-weight: 700; }
+  .partes td:first-child { font-family: "IBM Plex Mono", monospace; font-size: .9rem; white-space: nowrap; }
+  .tabela { overflow-x: auto; }
+
+  .rodape { padding: 40px 0 56px; border-top: 2px solid var(--linha); background: var(--painel); color: var(--suave); font-size: .95rem; }
+  .rodape .equipe { font-size: 1.1rem; color: var(--texto); }
+
+  @media (max-width: 920px) {
+    .etapa { grid-template-columns: minmax(0, 1fr); }
+    .tempo { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 24px; }
+    .numeros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .laco { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 0 16px; }
+    .abertura { padding: 40px 0 40px; }
+    .tempo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="index.html">Onde Fica?</a>
+    <nav aria-label="Páginas">
+      <a href="index.html">Início</a>
+      <a href="processo.html" aria-current="page">Passo a passo</a>
+      <a href="#etapas">Etapas</a>
+      <a href="#por-dentro">Como funciona</a>
+      <a href="https://github.com/PQueirozDev/PAC-Adventure">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="abertura">
+    <div class="wrap">
+      <h1>Passo a passo da criação</h1>
+      <p class="intro">Como o Onde Fica? saiu de uma ideia e virou um jogo com 15 fases e dois chefes finais.</p>
+      <p class="detalhe">Cada etapa desta página corresponde a um commit no GitHub. As imagens de cada versão são as capturas que ficaram salvas no histórico do repositório, então dá para ver o jogo mudando de uma etapa para a outra.</p>
+      <ul class="numeros">
+        <li><strong>15</strong><span>perguntas, 2 delas chefes finais</span></li>
+        <li><strong>27</strong><span>estados no mapa de letras</span></li>
+        <li><strong>1</strong><span>arquivo em C, o <code>main.c</code></span></li>
+        <li><strong>6</strong><span>etapas, cada uma um commit</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <section id="linha-do-tempo">
+    <div class="wrap">
+      <h2>Linha do tempo</h2>
+      <p class="sub">Datas e mensagens tiradas do histórico do Git. Clique para ver o que mudou em cada commit.</p>
+      <ol class="tempo">
+        <li><span class="data">21/09/2026</span><a href="https://github.com/PQueirozDev/PAC-Adventure/commit/6f4f31cda23f1117470470e3a32879770ba3bac6">Repositório criado</a></li>
+        <li class="marco"><span class="data">26/10/2026</span><a href="https://github.com/PQueirozDev/PAC-Adventure/commit/8c71d517d1fc6eabbd2a11c1027ed3c6fce522e0">Primeira versão jogável</a></li>
+        <li><span class="data">26/10/2026</span><a href="https://github.com/PQueirozDev/PAC-Adventure/commit/6b9dc8aba2089ca38627d52e52d912d2f04b40a4">Mapa no formato do Brasil</a></li>
+        <li><span class="data">26/10/2026</span><a href="https://github.com/PQueirozDev/PAC-Adventure/commit/6a8642068f46f1ac1f9237ca09e8b286f9ae3373">Menu, tutorial e créditos</a></li>
+        <li><span class="data">26/10/2026</span><a href="https://github.com/PQueirozDev/PAC-Adventure/commit/a1cdd10cfe7eb29d31daca884050c388ca049643">Site e documentação</a></li>
+        <li class="marco"><span class="data">06/11/2026</span><a href="https://github.com/PQueirozDev/PAC-Adventure/commit/fd7471d410c2a77ac3c3113063a62d9455e29482">15 fases e chefes finais</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="etapas">
+    <div class="wrap">
+      <h2>As etapas</h2>
+      <p class="sub">O jogo cresceu aos poucos. Cada etapa só começou depois que a anterior estava funcionando.</p>
+
+      <article class="etapa">
+        <div>
+          <div class="rotulo"><span class="num">1</span><span class="commit">21/09/2026 · <a href="https://github.com/PQueirozDev/PAC-Adventure/commit/6f4f31cda23f1117470470e3a32879770ba3bac6">6f4f31c</a></span></div>
+          <h3>A ideia e o repositório</h3>
+          <p>O projeto começou com a escolha do tema: um jogo educativo de geografia. O jogador vê a foto de um monumento brasileiro e precisa clicar no estado onde ele fica.</p>
+          <p>O repositório foi criado no GitHub para guardar o código e o histórico de cada mudança.</p>
+          <ul>
+            <li>Linguagem: C.</li>
+            <li>Biblioteca gráfica: Allegro 5, instalada pelo NuGet no Visual Studio.</li>
+            <li>Conteúdo: estados, regiões e patrimônio cultural do Brasil.</li>
+          </ul>
+        </div>
+        <div>
+          <pre><span class="com">// a regra do jogo em pseudocódigo</span>
+mostrar(foto_do_monumento);
+esperar(clique_no_mapa);
+if (estado_clicado == resposta) {
+    pontos += 10;
+}</pre>
+          <p class="volta">A regra do jogo resumida em pseudocódigo. Todo o resto do código serve para desenhar isso na tela e ler o mouse.</p>
+        </div>
+      </article>
+
+      <article class="etapa">
+        <div>
+          <div class="rotulo"><span class="num">2</span><span class="commit">26/10/2026 · <a href="https://github.com/PQueirozDev/PAC-Adventure/commit/8c71d517d1fc6eabbd2a11c1027ed3c6fce522e0">8c71d51</a></span></div>
+          <h3>Primeira versão jogável</h3>
+          <p>A primeira versão já tinha começo, meio e fim: três perguntas, pontuação, dica, mensagens de acerto e erro e uma tela final com o resultado.</p>
+          <p>O mapa ainda era provisório: 27 retângulos com as siglas, posicionados mais ou menos onde fica cada estado. Serviu para testar o Allegro: abrir a janela, carregar a foto e ler o clique do mouse.</p>
+          <p>Os dados de cada pergunta ficam em <strong>vetores paralelos</strong>: a mesma posição em todos os vetores é a mesma pergunta.</p>
+          <pre>char *monumentos[TOTAL_PERGUNTAS] = {
+    "Cristo Redentor",
+    "Teatro Amazonas",
+    "Congresso Nacional"
+};
+int respostas[TOTAL_PERGUNTAS] = {
+    24, <span class="com">// RJ</span>
+    2,  <span class="com">// AM</span>
+    16  <span class="com">// DF</span>
+};</pre>
+        </div>
+        <div>
+          <figure>
+            <img src="imagens/historico/v1-mapa-retangulos.png" alt="Primeira versão: foto do Cristo Redentor e o mapa feito de retângulos com as siglas dos estados" width="880" height="600" loading="lazy">
+            <figcaption><b>Versão 1.</b> O mapa de retângulos, com São Paulo aceso embaixo do mouse.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/historico/v1-tela-final.png" alt="Tela final da primeira versão com 20 de 30 pontos" width="880" height="600" loading="lazy">
+            <figcaption><b>Tela final da versão 1.</b> Três perguntas, no máximo 30 pontos.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="etapa">
+        <div>
+          <div class="rotulo"><span class="num">3</span><span class="commit">26/10/2026 · <a href="https://github.com/PQueirozDev/PAC-Adventure/commit/6b9dc8aba2089ca38627d52e52d912d2f04b40a4">6b9dc8a</a></span></div>
+          <h3>Mapa no formato do Brasil</h3>
+          <p>Os retângulos foram trocados por uma <strong>matriz de letras</strong> com 46 linhas e 47 colunas. Cada letra é um estado e o ponto é o mar. Na tela, cada letra vira um quadradinho de 8 pixels.</p>
+          <p>As fronteiras são desenhadas onde a letra do vizinho é diferente. O Distrito Federal e Sergipe foram um pouco aumentados para dar para clicar.</p>
+<pre><span class="com">// U = SP   V = MG   Y = RJ   . = mar</span>
+"OO<span class="u">UUUUUUU</span><span class="v">VVVV</span><span class="y">YYY</span>.......",
+"OXX<span class="u">UUUUUU</span><span class="v">V</span><span class="u">U</span><span class="y">YYY</span>.........",</pre>
+          <p>Para saber qual estado foi clicado, a posição do mouse é dividida pelo tamanho do quadradinho. Como é uma divisão entre inteiros, o resultado já é a linha e a coluna da matriz.</p>
+<pre>int coluna = (x - MAPA_X) / CELULA;
+int linha  = (y - MAPA_Y) / CELULA;
+return estado_da_letra(mapa[linha][coluna]);</pre>
+        </div>
+        <div>
+          <figure>
+            <img src="imagens/historico/v2-mapa-brasil.png" alt="Segunda versão: mapa do Brasil feito de quadradinhos, com o Rio de Janeiro em amarelo após um acerto" width="880" height="600" loading="lazy">
+            <figcaption><b>Versão 2.</b> O mesmo jogo, agora com o contorno do Brasil. O Rio de Janeiro fica amarelo no acerto.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="etapa">
+        <div>
+          <div class="rotulo"><span class="num">4</span><span class="commit">26/10/2026 · <a href="https://github.com/PQueirozDev/PAC-Adventure/commit/6a8642068f46f1ac1f9237ca09e8b286f9ae3373">6a86420</a></span></div>
+          <h3>Menu, tutorial e créditos</h3>
+          <p>O jogo ganhou uma tela de entrada com os botões Jogar, Como jogar e Créditos. Cada tela tem um número com nome, e a variável <code>tela</code> guarda em qual delas o jogador está.</p>
+          <p>A cada volta do laço principal, um <code>if / else if</code> olha essa variável e desenha só a tela atual. Para trocar de tela, basta mudar o valor.</p>
+<pre>#define TELA_MENU     0
+#define TELA_TUTORIAL 1
+#define TELA_CREDITOS 2
+#define TELA_JOGO     3
+#define TELA_FIM      4
+
+tela = TELA_CREDITOS; <span class="com">// troca de tela</span></pre>
+          <p>Os botões são retângulos. A função <code>mouse_dentro</code> diz se o mouse está em cima de um deles, e o mesmo teste serve para deixar o botão verde e para aceitar o clique.</p>
+        </div>
+        <div>
+          <figure>
+            <img src="imagens/historico/v3-menu.png" alt="Tela de entrada com o título Onde Fica? e os botões Jogar, Como jogar e Créditos" width="880" height="600" loading="lazy">
+            <figcaption><b>Versão 3.</b> A tela de entrada, com o botão Jogar destacado.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="etapa">
+        <div>
+          <div class="rotulo"><span class="num">5</span><span class="commit">26/10/2026 · <a href="https://github.com/PQueirozDev/PAC-Adventure/commit/a1cdd10cfe7eb29d31daca884050c388ca049643">a1cdd10</a></span></div>
+          <h3>Site e documentação</h3>
+          <p>Com o jogo funcionando, foram escritos os textos que explicam o projeto:</p>
+          <ul>
+            <li><code>README.md</code>: o que é o jogo, as telas, os controles e como rodar.</li>
+            <li><code>EXPLICACAO.md</code>: o código explicado parte por parte, para a apresentação.</li>
+            <li>O site em <code>docs/</code>, publicado pelo GitHub Pages, com uma mini versão do mapa que roda no navegador.</li>
+          </ul>
+          <p>O mapa do site usa a mesma matriz de letras do <code>main.c</code>, só que em JavaScript.</p>
+        </div>
+        <div>
+          <figure>
+            <img src="imagens/0-como-jogar.png" alt="Tela Como jogar com o passo a passo, a legenda de cores e as teclas" width="880" height="600" loading="lazy">
+            <figcaption><b>Como jogar.</b> O tutorial dentro do jogo, com a legenda das cores do mapa e as teclas.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="etapa">
+        <div>
+          <div class="rotulo"><span class="num">6</span><span class="commit">06/11/2026 · <a href="https://github.com/PQueirozDev/PAC-Adventure/commit/fd7471d410c2a77ac3c3113063a62d9455e29482">fd7471d</a></span></div>
+          <h3>15 fases e chefes finais</h3>
+          <p>O jogo passou de 3 para 15 perguntas, com monumentos de todas as regiões, do Elevador Lacerda à Ópera de Arame. Cada foto foi recortada no tamanho 300 × 360 pixels.</p>
+          <p>As duas últimas perguntas viraram <strong>chefes finais</strong>: o Forte dos Reis Magos e o Real Forte Príncipe da Beira. Neles:</p>
+          <ul>
+            <li>o acerto vale 30 pontos em vez de 10;</li>
+            <li>a tecla D não mostra dica;</li>
+            <li>o mapa não acende quando o mouse passa por cima;</li>
+            <li>a foto ganha moldura vermelha.</li>
+          </ul>
+          <p>Tudo isso depende de uma função pequena, usada em cada um desses lugares:</p>
+<pre>#define PRIMEIRO_CHEFE 13
+
+int eh_chefe(int p)
+{
+    return p >= PRIMEIRO_CHEFE;
+}</pre>
+          <p>A tela final também mudou: os 15 resultados aparecem em duas colunas, usando <code>p / 8</code> para a coluna e <code>p % 8</code> para a linha.</p>
+        </div>
+        <div>
+          <figure>
+            <img src="imagens/5-chefe-final.png" alt="Chefe final: foto do Forte dos Reis Magos com moldura vermelha e o aviso de que vale 30 pontos" width="880" height="600" loading="lazy">
+            <figcaption><b>Chefe final.</b> Moldura vermelha, sem dica e sem o mapa acender.</figcaption>
+          </figure>
+          <figure>
+            <img src="imagens/4-tela-final.png" alt="Tela final com 170 de 190 pontos e o resultado das 15 perguntas em duas colunas" width="880" height="600" loading="lazy">
+            <figcaption><b>Tela final atual.</b> 15 perguntas, no máximo 190 pontos.</figcaption>
+          </figure>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="por-dentro">
+    <div class="wrap">
+      <h2>Como o jogo funciona por dentro</h2>
+      <p class="sub">O jogo inteiro é um laço <code>while</code> que repete três passos até o jogador fechar a janela.</p>
+      <ol class="laco">
+        <li>
+          <h3>Desenha</h3>
+          <p>Olha a variável <code>tela</code> e desenha só a tela atual: menu, tutorial, créditos, pergunta ou tela final.</p>
+        </li>
+        <li>
+          <h3>Espera</h3>
+          <p><code>al_wait_for_event</code> fica parado até o jogador apertar uma tecla, mexer ou clicar o mouse.</p>
+        </li>
+        <li>
+          <h3>Reage</h3>
+          <p>Um <code>if / else if</code> decide o que fazer: trocar de tela, mostrar a dica, conferir a resposta ou ir para a próxima pergunta.</p>
+        </li>
+      </ol>
+      <p class="volta">Depois do passo 3, o laço volta para o passo 1 e desenha a tela de novo, já com as mudanças.</p>
+
+      <h3 style="margin-top: 56px;">As partes do <code>main.c</code></h3>
+      <div class="tabela">
+        <table class="partes">
+          <thead><tr><th>Parte</th><th>O que faz</th></tr></thead>
+          <tbody>
+            <tr><td>#define</td><td>Constantes: tamanho da janela, número de perguntas, pontos por acerto, posição do mapa e números das telas.</td></tr>
+            <tr><td>mapa[ ]</td><td>A matriz de letras com o desenho do Brasil.</td></tr>
+            <tr><td>funções</td><td><code>estado_na_tela</code>, <code>mouse_dentro</code>, <code>desenhar_botao</code>, <code>escrever_grande</code>, <code>eh_chefe</code> e <code>pontos_da_pergunta</code>.</td></tr>
+            <tr><td>vetores</td><td>Os dados das perguntas: monumento, foto, resposta, dica e curiosidade.</td></tr>
+            <tr><td>while (rodando)</td><td>O laço principal: desenha, espera um evento e reage.</td></tr>
+            <tr><td>al_destroy_...</td><td>No fim, libera da memória as fotos, a fonte, a fila de eventos e a janela.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top: 56px;">Ferramentas usadas</h3>
+      <ul class="ferramentas">
+        <li><strong>Linguagem C</strong><span>Todo o jogo em um arquivo, com variáveis, vetores, matriz, condicionais, laços e funções.</span></li>
+        <li><strong>Allegro 5</strong><span>Janela, teclado, mouse, fonte, formas e imagens. Addons Font, Primitives e Image.</span></li>
+        <li><strong>Visual Studio 2022</strong><span>Editor e compilador. O Allegro é instalado pelo NuGet.</span></li>
+        <li><strong>Git e GitHub</strong><span>Histórico de cada versão e hospedagem do código e deste site.</span></li>
+        <li><strong>Wikimedia Commons</strong><span>Fotos dos monumentos com licença livre, recortadas para 300 × 360 pixels.</span></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <div class="wrap">
+    <p class="equipe">Desenvolvido por Arthur Pimentel, Christopher Nithigale e Pedro Queiroz.</p>
+    <p>Projeto Integrador — Ciência da Computação. <a href="index.html">Voltar para a página do jogo</a>.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -349,25 +349,6 @@ int main()
 
     char *desenvolvedores[3] = { "Arthur Pimentel", "Christopher Nithigale", "Pedro Queiroz" };
 
-    // autor e licenca de cada foto (todas do Wikimedia Commons)
-    char *creditos_fotos[TOTAL_PERGUNTAS] = {
-        "Cristo Redentor: Artyominc (CC BY-SA 3.0)",
-        "Teatro Amazonas: Susan Valentim (CC BY-SA 4.0)",
-        "Congresso Nacional: Mariordo (CC BY-SA 4.0)",
-        "Elevador Lacerda: JLPizzol (CC BY-SA 4.0)",
-        "Arcos da Lapa: Mike Peel (CC BY-SA 4.0)",
-        "Monumento as Bandeiras: Dornicke (dominio publico)",
-        "Praca da Se: Wilfredor (CC0)",
-        "Lencois Maranhenses: Julius Dadalti (CC BY-SA 4.0)",
-        "Opera de Arame: Domingos Bongestabs (CC BY-SA 4.0)",
-        "Formadores de Nacionalidade: Paul R. Burley (CC BY-SA 4.0)",
-        "Padre Cicero: Allan Patrick (CC BY-SA 2.0)",
-        "Relogio Municipal: JLPizzol (CC BY-SA 4.0)",
-        "Ponte dos Ingleses: Claudney Neves (CC BY-SA 4.0)",
-        "Forte dos Reis Magos: DlauriniJr (CC BY-SA 4.0)",
-        "Forte Principe da Beira: Israelvalejr (CC BY-SA 4.0)"
-    };
-
     // ===== VARIAVEIS DO JOGO =====
     int pergunta = 0;   // qual pergunta esta na tela (0, 1 ou 2)
     int pontos = 0;     // pontuacao: +10 por acerto
@@ -447,22 +428,18 @@ int main()
         }
         else if (tela == TELA_CREDITOS) {
             // ===== TELA DE CREDITOS =====
-            al_draw_filled_rounded_rectangle(100, 30, LARGURA - 100, 505, 12, 12, painel);
-            al_draw_rounded_rectangle(100, 30, LARGURA - 100, 505, 12, 12, borda, 3);
+            al_draw_filled_rounded_rectangle(160, 30, LARGURA - 160, 500, 12, 12, painel);
+            al_draw_rounded_rectangle(160, 30, LARGURA - 160, 500, 12, 12, borda, 3);
             escrever_grande(fonte, amarelo, LARGURA / 2, 55, 4, "CREDITOS");
 
-            al_draw_text(fonte, amarelo, LARGURA / 2, 125, ALLEGRO_ALIGN_CENTRE, "DESENVOLVIDO POR");
+            al_draw_text(fonte, amarelo, LARGURA / 2, 150, ALLEGRO_ALIGN_CENTRE, "DESENVOLVIDO POR");
             for (int i = 0; i < 3; i++) {
-                escrever_grande(fonte, branco, LARGURA / 2, 145 + i * 28, 2, desenvolvedores[i]);
+                escrever_grande(fonte, branco, LARGURA / 2, 185 + i * 45, 3, desenvolvedores[i]);
             }
 
-            al_draw_text(fonte, amarelo, LARGURA / 2, 245, ALLEGRO_ALIGN_CENTRE, "FOTOS (WIKIMEDIA COMMONS)");
-            for (int i = 0; i < TOTAL_PERGUNTAS; i++) {
-                al_draw_text(fonte, branco, LARGURA / 2, 262 + i * 13, ALLEGRO_ALIGN_CENTRE, creditos_fotos[i]);
-            }
-
-            al_draw_text(fonte, cinza, LARGURA / 2, 480, ALLEGRO_ALIGN_CENTRE,
-                "Projeto Integrador - Feito em C com Allegro 5");
+            al_draw_line(LARGURA / 2 - 150, 360, LARGURA / 2 + 150, 360, borda, 2);
+            al_draw_text(fonte, cinza, LARGURA / 2, 385, ALLEGRO_ALIGN_CENTRE, "Projeto Integrador");
+            al_draw_text(fonte, cinza, LARGURA / 2, 405, ALLEGRO_ALIGN_CENTRE, "Feito em C com Allegro 5");
 
             desenhar_botao(fonte, "VOLTAR", VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A,
                 mouse_dentro(mouse_x, mouse_y, VOLTAR_X, VOLTAR_Y, VOLTAR_L, VOLTAR_A));
